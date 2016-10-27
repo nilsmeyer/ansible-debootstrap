@@ -1,0 +1,15 @@
+---
+
+dependencies:
+  global:
+    - parted
+    - gdisk
+    - debootstrap
+    - xfsprogs
+    - e2fsprogs
+  encryption:
+    - cryptsetup
+  zfs:
+    - zfsutils
+
+_target_devices: []

@@ -1,0 +1,34 @@
+---
+# The reason to use tmpfs here is that dpkg is awful slow, especially when installing to
+# slower devices (think thumb drive). It can be configured by the user, however.
+
+- block:
+  - name: create another tmpdir
+    command: mktemp -d
+    register: _mktemp
+
+  - name: set target (tmpfs)
+    set_fact:
+      _bootstrap_target: "{{ _tmpfs.stdout }}"
+      _mktemp: None
+
+  - name: mount tmpfs
+    mount:
+      fstype: tmpfs
+      name: "{{ _bootstrap_target }}"
+      opts: "size=2G"
+      state: mounted
+      fstab: "/dev/null"
+  when: use_tmpfs
+
+- name: set target
+  set_fact:
+    _bootstrap_target: "{{ _tgt_root }}"
+  when: not use_tmpfs
+
+- name: run bootstrap
+  command: "debootstrap {{ release }} {{ _bootstrap_target }}"
+
+- name: umount tmpfs
+  command: "umount {{ _bootstrap_target }}"
+  when: use_tmpfs
