@@ -1,0 +1,16 @@
+---
+
+- name: Create ext4 filesystems
+  command: >
+    mkfs.ext4 -U {{ item.key }} {{ item.value['mkfs_options']|default('-b 4096') }} {{ item.value['device'] }}
+  with_dict: "{{ _tgt_devices }}"
+  when: >
+    not item.value['encrypt']|default(False) and item.value['fs']|default('undefined') == 'ext4'
+
+- name: Create xfs filesystems
+  command: >
+    mkfs.xfs -f -m uuid={{ item.key }} {{ item.value['mkfs_options']|default('-b size=4096 -s size=4096') }}
+    {{ item.value['device'] }}
+  with_dict: "{{ _tgt_devices }}"
+  when: >
+    not item.value['encrypt']|default(False) and item.value['fs']|default('undefined') == 'xfs'

@@ -7,9 +7,32 @@ dependencies:
     - debootstrap
     - xfsprogs
     - e2fsprogs
+    - uuid-runtime
+    - eatmydata
   encryption:
     - cryptsetup
   zfs:
     - zfsutils
 
+supported_releases: ['jessie', 'stretch', 'xenial', 'yakkety', 'zesty']
+
 _target_devices: []
+_devices_used: []
+_mountlist: []
+
+required_packages:
+  all:
+    - grub-pc
+    - openssh-server
+    - locales
+  xenial:
+    - linux-image-generic
+  yakkety:
+    - linux-image-generic
+  jessie:
+    - linux-image-amd64
+  strech:
+    - linux-image-amd64
+
+_apt_env:
+  DEBIAN_FRONTEND: noninteractive

@@ -1,0 +1,11 @@
+{% for uuid in _tgt_devices %}
+{# many things to skip here #}
+{% if not (_tgt_devices[uuid]['encrypt']|default(False)) and 'mount' in _tgt_devices[uuid] %}
+{%- if  'use_dev' in _tgt_devices[uuid] and _tgt_devices[uuid]['use_dev']|default(False) %}
+{%- set __device = _tgt_devices[uuid]['device'] %}
+{% else %}
+{%- set __device = 'UUID="' + uuid + '"' %}
+{% endif %}
+{{ __device }} {{ _tgt_devices[uuid]['mount'] }} {{ _tgt_devices[uuid]['fs'] }} {{ _tgt_devices[uuid]['mountopts']|default('defaults') }} 0 0
+{% endif %}
+{% endfor %}

@@ -1,0 +1,10 @@
+---
+
+- name: Wipe disklabel
+  command: sgdisk -Z {{ item }}
+  with_items: "{{ _target_devices }}"
+
+- name: discard device
+  command: blkdiscard {{ item }}
+  failed_when: False
+  with_items: "{{ _target_devices }}"

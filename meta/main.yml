@@ -1,0 +1,20 @@
+---
+
+galaxy_info:
+  author: "Nils Meyer"
+  description: "Bootstrap a Debian / Ubuntu system"
+  license: "LGPL"
+  min_ansible_version: 2.1
+  platforms:
+  - name: Debian
+    versions:
+    - jessie
+  - name: Ubuntu
+    versions:
+      - trusty
+      - xenial
+      - yakkety
+  galaxy_tags:
+    - system
+
+dependencies: []

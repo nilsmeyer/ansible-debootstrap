@@ -1,0 +1,23 @@
+---
+
+# packages to install
+install_packages: []
+
+# use tmpfs for debootstrap?
+use_tmpfs: yes
+
+locales:
+- en_US.UTF-8
+
+timezone: UTC
+
+# graphical grub?
+text_console: no
+
+ssh_host_keys:
+- algo: 'ed25519'
+  keylen: '1337'
+- algo: 'ecdsa'
+  keylen: '521'
+- algo: 'rsa'
+  keylen: '4096'

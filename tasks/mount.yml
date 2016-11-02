@@ -1,0 +1,24 @@
+---
+
+- name: create mountpoint dictionary
+  set_fact:
+    _mountpoints: >
+      {{ _mountpoints|default({})|combine({item.value['mount']: item.value}) }}
+  with_dict: "{{ _tgt_devices }}"
+  when: >
+    not item.value['encrypt']|default(False) and item.value['fs']|default('undefined') in ['ext4', 'xfs'] and
+    item.value['mount'] is defined
+
+- name: set ordered mount list
+  set_fact:
+    _mountlist: "{{ _mountlist|default([]) + [item.key] }}"
+  with_dict: "{{ _mountpoints }}"
+
+# A bit of shell scripting here to ensure that the directory exists on the mounted device
+- name: create mountpoints and mount
+  shell: >
+    if [ ! -d {{ _tgt_root }}{{ _mountpoints[item]['mount'] }} ];
+    then mkdir {{ _tgt_root }}{{ _mountpoints[item]['mount'] }}; fi;
+    mount {{ _mountpoints[item]['device'] }} {{ _tgt_root }}{{ _mountpoints[item]['mount'] }}
+  with_items: "{{ _mountlist|sort }}"
+  register: _mount

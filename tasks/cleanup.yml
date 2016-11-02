@@ -1,0 +1,27 @@
+---
+
+- name: umount pseudo filesystems
+  command: umount {{ _tgt_root }}/{{ item }}
+  with_items:
+  - dev/pts
+  - proc
+  - sys
+  - dev
+  when: _pseudomount is defined and _pseudomount.changed
+
+- name: umount target
+  shell: >
+    umount {{ _tgt_root }}{{ _mountpoints[item]['mount'] }}
+  with_items: "{{ (_mountlist|sort)[::-1] }}" # | reverse seems to be broken
+  when: _mount is defined and _mount.changed
+
+- name: Close luks devices
+  command: >
+    cryptsetup luksClose /dev/mapper/{{ item.value['target'] }}
+  with_dict: "{{ _encrypt_targets|default({}) }}"
+  when: _luksopen is defined and _luksopen.changed
+
+- name: Remove mountpoint tmpdir
+  file:
+    state: absent
+    dest: "{{ _tgt_root }}"

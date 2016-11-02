@@ -1,0 +1,15 @@
+---
+
+- fail:
+    msg: variable 'layout' is not defined
+  when: layout is not defined
+
+- fail:
+    msg: >
+      release '{{ release|default('undefined') }}' not defined or supported, has to be one of
+      {{ supported_releases|combine(', ') }}
+  when: release is not defined or release not in supported_releases
+
+- fail:
+    msg: root password doesn't look to be hashed, try using mkpasswd or something alike
+  when: root_password is defined and root_password[0] != '$'

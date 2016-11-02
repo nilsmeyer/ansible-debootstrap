@@ -9,16 +9,12 @@
 
   - name: set target (tmpfs)
     set_fact:
-      _bootstrap_target: "{{ _tmpfs.stdout }}"
+      _bootstrap_target: "{{ _mktemp.stdout }}"
       _mktemp: None
 
   - name: mount tmpfs
-    mount:
-      fstype: tmpfs
-      name: "{{ _bootstrap_target }}"
-      opts: "size=2G"
-      state: mounted
-      fstab: "/dev/null"
+    command: "mount -t tmpfs -o size=2G none {{ _bootstrap_target }} warn=no"
+
   when: use_tmpfs
 
 - name: set target
@@ -27,8 +23,77 @@
   when: not use_tmpfs
 
 - name: run bootstrap
-  command: "debootstrap {{ release }} {{ _bootstrap_target }}"
+  command: "eatmydata debootstrap {{ release }} {{ _bootstrap_target }}"
 
-- name: umount tmpfs
-  command: "umount {{ _bootstrap_target }}"
+- name: bind mount pseudo filesystems
+  shell: "mkdir {{ _bootstrap_target }}/{{ item }}; mount --bind /{{ item }} {{ _bootstrap_target }}/{{ item }} warn=no"
+  register: _pseudomount
+  with_items:
+  - proc
+  - sys
+  - dev
+  - dev/pts
+
+- name: build list of packages to install
+  set_fact:
+    _install: "{{ install_packages + required_packages['all'] + required_packages[release] }}"
+
+- debug:
+    msg: "Going to install: {{ _install|join(', ') }}"
+    verbosity: 2
+
+- block:
+  - name: update sources
+    command: "chroot {{ _bootstrap_target }} apt-get update"
+
+  # cut down on fsync
+  - name: install eatmydata
+    command: "chroot {{ _bootstrap_target }} apt-get -y install eatmydata"
+
+  - name: allow ppa use
+    command: "chroot {{ _bootstrap_target }} eatmydata apt-get -y install software-properties-common"
+    when: install_ppa|default([])|length > 0
+
+  # A bit ineffective, since we'll be upgrading the cache every time.
+  - name: enable ppa
+    shell: "chroot  {{ _bootstrap_target }} eatmydata add-apt-repository -yu {{ item }}"
+    with_items: "{{ install_ppa }}"
+
+  - name: install packages
+    command: "chroot {{ _bootstrap_target }} eatmydata apt-get -y install {{ _install|join(' ') }}"
+
+  - name: clean up packages
+    command: "chroot {{ _bootstrap_target }} eatmydata apt-get clean"
+
+  environment: "{{ _apt_env }}"
+
+- block:
+  - name: umount pseudo filesystems
+    command: umount {{ _bootstrap_target }}/{{ item }}
+    with_items:
+    - dev/pts
+    - proc
+    - sys
+    - dev
+
+  - name: copy data from temp
+    shell: cp -a {{ _bootstrap_target }}/* {{ _tgt_root }}/
+
+  - name: bind mount pseudo filesystems
+    shell: mkdir {{ _tgt_root }}/{{ item }}; mount --bind /{{ item }} {{ _tgt_root }}/{{ item }}
+    register: _pseudomount
+    with_items:
+    - proc
+    - sys
+    - dev
+    - dev/pts
+
+  - name: umount tmpfs
+    command: "umount {{ _bootstrap_target }}"
+
+  - name: remove tmpfs
+    file:
+      state: absent
+      dest: "{{ _bootstrap_target }}"
+
   when: use_tmpfs

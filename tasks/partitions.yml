@@ -1,0 +1,76 @@
+---
+
+- block:
+  - name: create list of target devices
+    set_fact:
+      _target_devices: "{{ _target_devices + [item.device] }}"
+    with_items: "{{ layout }}"
+
+  - name: set uuids
+    set_fact:
+      _partuuids: "{{ _partuuids|default({})|combine({item.0.device + '_' + item.1.num|string: 2147483647|random()|to_uuid()}) }}"
+    with_subelements:
+      - "{{ layout }}"
+      - partitions
+      - "{{ {'skip_missing': True} }}"
+
+  # Partitions are stored in ansible facts, however this only seems to work
+  # for some devices.
+  - name: check if device is already partitioned
+    shell: "lsblk -nJ -o NAME,TYPE,PARTTYPE,FSTYPE {{ _target_devices|join(' ') }}"
+    always_run: True
+    changed_when: False
+    register: _lsblk
+
+  - name: set helper for blockdevices
+    set_fact:
+      _tmp: "{{ _lsblk.stdout|from_json }}"
+
+  - name: check for partitions on target_device
+    set_fact:
+      _devices_used: "{{ _devices_used + [item['name']] }}"
+    with_items: "{{ _tmp['blockdevices'] }}"
+    when: item['children'] is defined
+
+  - fail:
+      msg: "Device(s) already contain partitions: {{ _devices_used|join(', ') }}"
+    when: "_devices_used|length() > 0"
+
+  # This will be rather slow. I have yet to find a way to create on sgdisk command per device
+  - name: Create Partitions
+    command: >
+      sgdisk -n {{ item.1.num }}:0:{{ item.1.size|default(0) }}
+      -t {{ item.1.num }}:{{ item.1.type|default('8200') }}
+      -u {{ item.1.num }}:{{ _partuuids[item.0.device + '_' + item.1.num|string] }} {{ item.0.device }}
+    with_subelements:
+      - "{{ layout }}"
+      - partitions
+      - "{{ {'skip_missing': True} }}"
+
+  - name: find devices for uuid
+    command: "blkid -l -o device -t PARTUUID='{{ item.value }}'"
+    register: _blkid
+    with_dict: "{{ _partuuids }}"
+
+  - name: store real device for uuid
+    set_fact:
+      _tgt_devices: "{{ _tgt_devices|default({})|combine({item.item.value: {'device': item.stdout}}) }}"
+    with_items: "{{ _blkid.results }}"
+
+  - name: enrich partition data
+    set_fact:
+      _tgt_devices: >
+        {{
+        _tgt_devices|combine({_partuuids[item.0.device + '_' + item.1.num|string]:
+        _tgt_devices[_partuuids[item.0.device + '_' + item.1.num|string]]|combine(item.1)})
+        }}
+    with_subelements:
+      - "{{ layout }}"
+      - partitions
+      - "{{ {'skip_missing': True} }}"
+
+- rescue:
+  - set_fact:
+      _role_fail: True
+
+  - include: wipe.yml
