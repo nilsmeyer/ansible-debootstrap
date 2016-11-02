@@ -1,0 +1,52 @@
+---
+
+- debug:
+    msg: "item {{ item }}, replace {{ item|replace('../templates/', '') }}"
+  with_fileglob:
+  - ../templates/etc/*
+
+- name: Cursory variable check
+  include: sanity.yml
+
+- name: Install global dependencies
+  apt:
+    name: "{{ item }}"
+    state: latest
+    update_cache: yes
+    cache_valid_time: "{{ debian_cache_valid_time|default(7200) }}"
+  with_items:
+  - "{{ dependencies.global }}"
+
+- name: create mountpoint
+  register: _mktemp
+  command: mktemp -d
+
+- name: set mountpoint
+  set_fact:
+    _tgt_root: "{{ _mktemp.stdout }}"
+    _mktemp: None
+
+- name: Partition Devices
+  include: partitions.yml
+
+- name: encrypt devices
+  include: encryption.yml
+
+- name: Create filesystems
+  include: fs.yml
+
+- name: mount filesystems
+  include: mount.yml
+
+- name: run bootstrap
+  include: bootstrap.yml
+
+- name: configure target system
+  include: configure.yml
+
+- name: Cleanup
+  include: cleanup.yml
+
+- name: wipe
+  include: wipe.yml
+  when: _role_fail|default(True)
