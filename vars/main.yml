@@ -12,7 +12,7 @@ dependencies:
   encryption:
     - cryptsetup
   zfs:
-    - zfsutils
+    - zfsutils-linux
 
 supported_releases: ['jessie', 'stretch', 'xenial', 'yakkety', 'zesty']
 
