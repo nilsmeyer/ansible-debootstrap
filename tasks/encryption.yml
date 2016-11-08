@@ -9,6 +9,10 @@
     with_items:
     - "{{ dependencies.encryption }}"
 
+  - name: add dependencies to install list
+    set_fact:
+      install_packages: "{{ install_packages + dependencies['encryption'] }}"
+
   - name: set encryption targets (full device)
     set_fact:
       _encrypt_targets: "{{ _encrypt_targets|default({})|combine({item.device: item}) }}"
