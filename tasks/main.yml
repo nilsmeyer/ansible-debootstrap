@@ -1,10 +1,5 @@
 ---
 
-- debug:
-    msg: "item {{ item }}, replace {{ item|replace('../templates/', '') }}"
-  with_fileglob:
-  - ../templates/etc/*
-
 - name: Cursory variable check
   include: sanity.yml
 
@@ -35,6 +30,10 @@
 - name: Create filesystems
   include: fs.yml
 
+- name: Create and mount ZFS pools
+  include: zfs.yml
+  when: zfs_pool is defined and zfs_fs is defined
+
 - name: mount filesystems
   include: mount.yml
 
@@ -49,4 +48,4 @@
 
 - name: wipe
   include: wipe.yml
-  when: _role_fail|default(True)
+  when: _role_fail|default(False)
