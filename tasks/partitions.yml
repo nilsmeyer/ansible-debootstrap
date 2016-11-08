@@ -18,7 +18,6 @@
   # for some devices.
   - name: check if device is already partitioned
     shell: "lsblk -nJ -o NAME,TYPE,PARTTYPE,FSTYPE {{ _target_devices|join(' ') }}"
-    always_run: True
     changed_when: False
     register: _lsblk
 
