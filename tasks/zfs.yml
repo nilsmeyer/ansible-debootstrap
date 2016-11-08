@@ -1,0 +1,27 @@
+---
+
+- name: install dependencies
+  apt:
+    name: "{{ item }}"
+    state: latest
+    update_cache: no # skip cache check since we already ran apt
+  with_items:
+  - "{{ dependencies.zfs }}"
+
+- name: add dependencies to install list
+  set_fact:
+    install_packages: "{{ install_packages + dependencies['zfs'] }}"
+
+- name: create zpools
+  command: >
+    zpool create {% if 'options' in item %}-o {{ item['options']|default([])|join(' -o ') }}{% endif %}
+    {% if 'options' in item %}-O {{ item['fs_options']|default([])|join(' -O ') }}{% endif %}
+    -R {{ _tgt_root }} {{ item['poolname']|default('rpool') }} {{ item['devices']|join(' ') }}
+  with_items: "{{ zfs_pool }}"
+  register: _zpool
+
+- name: create zfs filesystems
+  command: >
+    zfs create {% if 'options' in item %}-o {{ item['options']|default([])|join(' -o ') }}{% endif %}
+    {{ item['path'] }}
+  with_items: "{{ zfs_fs }}"

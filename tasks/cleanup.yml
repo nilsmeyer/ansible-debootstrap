@@ -15,6 +15,11 @@
   with_items: "{{ (_mountlist|sort)[::-1] }}" # | reverse seems to be broken
   when: _mount is defined and _mount.changed
 
+- name: export zpools
+  shell: >
+    zpool export {{ item['poolname']|default('rpool') }}
+  with_items: zfs_pool|default([])|reverse
+
 - name: Close luks devices
   command: >
     cryptsetup luksClose /dev/mapper/{{ item.value['target'] }}
