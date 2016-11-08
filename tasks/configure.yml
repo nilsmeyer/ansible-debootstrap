@@ -105,6 +105,3 @@
 
   - name: wipe
     include: wipe.yml
-
-- pause:
-    prompt: "Continue & wipe?"
