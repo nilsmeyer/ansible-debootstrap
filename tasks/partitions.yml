@@ -38,7 +38,7 @@
   # This will be rather slow. I have yet to find a way to create on sgdisk command per device
   - name: Create Partitions
     command: >
-      sgdisk -n {{ item.1.num }}:0:{{ item.1.size|default(0) }}
+      sgdisk -n {{ item.1.num }}:0:{% if item.1.size is defined and item.1.size[0] != '+'%}+{%endif%}{{ item.1.size|default(0) }}
       -t {{ item.1.num }}:{{ item.1.type|default('8200') }}
       -u {{ item.1.num }}:{{ _partuuids[item.0.device + '_' + item.1.num|string] }} {{ item.0.device }}
     with_subelements:
