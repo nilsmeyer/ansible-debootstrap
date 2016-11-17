@@ -160,6 +160,29 @@ network:
       bridge_stp off 
 ```
 
+## Initial users `users`
+Users is a dictionary of users to create, with the user name as key. Options
+are: 
+`uid`: Desired user ID for the user (optional, default determined by OS)  
+`groups`: List of groups to add the user to  
+`authorized_keys`: List of ssh keys for the user  
+
+This is rather preliminary, the purpose is to add a user you can use for later
+provisioning
+
+### Example
+```
+users:
+  alice:
+    uid: 1000
+    groups:
+    - sudo
+    authorized_keys:
+    - ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBPvGHsJfISA3DPXVBIrgJYKqD/Myo+BrSBPGbFIm9QTuasn9lnYD9TMHPF7l/OnRnA7DApMVN7A83ppy2O4aXt8= alice@foo
+    - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIISRBncDXU4SgIY+FL+t116/6NArI+2vmjDpXFfU9Zs6 alice@foo
+    - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDFtYZBNjtLCe2RVuUslnjNyVS21WbJwKilWiNQGInbo/S590J+aBu2wAhqJA5rgejRzvMHqHvfKAia12d90edoDRT8Cab+vlTxXjG1dlGA8goq4ptBv2C9t2qpYnanZDRYiEJaL/pbR6TzsLllfSvRUGtCrNGpXRl+GqLAophShNC3GUlk+2JDm1FjZXpY+qqjmnBxBA26PUivfRUqIHCfZkym2s61z6fKQ+ntwK46fW05sKQqwaYtyQXeYtyi7sTa6hoNTrF8BZLXv/Del1sgyc/nSOp9ybKSTDt6JCVvAZwGZT4ZEMoazo27vpLyD+VrZBkxp+7N4OxnSiF3yZR/ alice@foo
+```
+
 ## ZFS configuration 
 ### Pool definition `zfs_pool`
 This defines the devices to use for the ZFS pool, you can use devices and
