@@ -58,6 +58,7 @@ provided by distro)
 `install_ppa`: PPAs to install (**Ubuntu Only**, see below)  
 `install_packages`: List of packages to install  
 `network`: Network configuration (**required**, see below)  
+`users`: User setup (**required**, see below)  
 `zfs_pool`: ZFS pool (see ZFS section)  
 `zfs_fs`: ZFS filesystems (see ZFS section)  
 `zfs_root`: ZFS devices to use as root
@@ -118,7 +119,7 @@ layout:
         mount: /
 ```
 
-### PPA to install, for Ubuntu `install_ppa`
+## PPA to install, for Ubuntu `install_ppa`
 Simple list of PPA to use, example:
 ```
 install_ppa:
