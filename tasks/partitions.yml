@@ -68,7 +68,7 @@
       - partitions
       - "{{ {'skip_missing': True} }}"
 
-- rescue:
+  rescue:
   - set_fact:
       _role_fail: True
 
