@@ -14,6 +14,13 @@ dependencies:
   zfs:
     - zfsutils-linux
 
+mirrors:
+  jessie: http://httpredir.debian.org/debian
+  stretch: http://httpredir.debian.org/debian
+  xenial: http://archive.ubuntu.com/ubuntu
+  yakkety: http://archive.ubuntu.com/ubuntu
+  zesty: http://archive.ubuntu.com/ubuntu
+
 supported_releases: ['jessie', 'stretch', 'xenial', 'yakkety', 'zesty']
 
 _target_devices: []
