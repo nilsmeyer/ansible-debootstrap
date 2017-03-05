@@ -23,7 +23,7 @@
   when: not use_tmpfs
 
 - name: run bootstrap
-  command: "eatmydata debootstrap {{ release }} {{ _bootstrap_target }}"
+  command: "eatmydata debootstrap {{ release }} {{ _bootstrap_target }} {{ use_mirror|default(mirrors[release]) }}"
 
 - name: bind mount pseudo filesystems
   shell: "mkdir {{ _bootstrap_target }}/{{ item }}; mount --bind /{{ item }} {{ _bootstrap_target }}/{{ item }} warn=no"
@@ -33,6 +33,12 @@
   - sys
   - dev
   - dev/pts
+
+- name: Link mtab
+  file:
+    src: "/proc/mounts"
+    dest: "{{ _bootstrap_target }}/etc/mtab"
+    state: link
 
 - name: build list of packages to install
   set_fact:
