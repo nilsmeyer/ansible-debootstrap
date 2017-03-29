@@ -12,6 +12,6 @@
 {# ZFS legacy mountpoints #}
 {% for fs in zfs_fs|default([]) %}
 {% if 'mount' in fs %}
-{{ fs.path }} {{ fs.mount }} defaults   0   0
+{{ fs.path }} {{ fs.mount }} zfs defaults   0   0
 {% endif %}
 {% endfor %}
