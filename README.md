@@ -231,7 +231,7 @@ zfs_fs:
     options:
     - canmount=off
     - mountpoint=none
-  - path: 'rpool/ROOT/{{ release }}'
+  - path: 'rpool/ROOT/ubuntu'
     options:
     - mountpoint=/
   - path: 'rpool/home'
@@ -244,17 +244,35 @@ zfs_fs:
     options:
     - exec=off
     - setuid=off
+    - mountpoint=legacy
+    mount: /var
   - path: 'rpool/var/cache'
     options:
     - 'com.sun:auto-snapshot=false'
+    - mountpoint=legacy
+    mount: /var/cache
   - path: 'rpool/var/log'
+    optons:
+    - mountpoint=legacy
+    mount: /var/log
   - path: 'rpool/var/spool'
+    optons:
+    - mountpoint=legacy
+    mount: /var/spool
   - path: 'rpool/var/tmp'
+    optons:
+    - mountpoint=legacy
+    mount: /var/tmp
   - path: 'rpool/var/lib'
+    optons:
+    - mountpoint=legacy
+    mount: /var/lib
   - path: 'rpool/var/lib/dpkg'
     options:
     - exec=on
+    - mountpoint=legacy
+    mount: /var/lib/dpkg
   - path: 'rpool/srv'
 
-zfs_root: 'rpool/ROOT/{{ release }}'
+zfs_root: 'rpool/ROOT/ubuntu'
 ```
