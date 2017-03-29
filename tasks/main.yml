@@ -45,7 +45,7 @@
 
 - name: Cleanup
   include: cleanup.yml
-  when: not skip_umount|bool|default(False)
+  when: not skip_umount|default(False)|bool
 
 - name: wipe
   include: wipe.yml
