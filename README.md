@@ -22,10 +22,10 @@ is strongly suggested you use ansible-vault here)
 
 ## Supported distributions
 * Debian
-  * Jessie
+  * Stretch
 * Ubuntu
   * xenial
-  * yakkety
+  * artful
 
 Minor modifications will likely make it possible to install newer and perhaps
 older versions as well.
@@ -33,26 +33,27 @@ older versions as well.
 ## Host system caveats
 
 This will make a few modifications to the system that is being used as install
-medium. This includes installing a few packages, otherwise everything should 
-be cleaned up afterwards. 
+medium. This includes installing a few packages, otherwise everything should
+be cleaned up afterwards.
 
 * It will install the eatmydata and debootstrap package
 * It will install cryptsetup for encrypted targets
 * It will install ZFS tools when using ZFS
 
-As a result, the host system **must** be encrypted. 
+Normally it is assumed that a some sort of PXE or USB rescue system is used,
+some caveats apply otherwise with regards to device names.
 
-# Configuration 
+# Configuration
 ## Global variables
 `release`: The release codename (**required**, example: *yakkety*)  
 `tgt_hostname`: Hostname of the target (**required**)
-`root_password`: Hashed, Salted root password, you can use mkpasswd to create 
+`root_password`: Hashed, Salted root password, you can use mkpasswd to create
 one (Example: `$1$sfQaZkVR$Vo/0pjmJaljzakEQFCr7Q/`, obviously **don't use this
 one ;) )**  
 `use_serial`: Serial device to use for console / grub  
-`use_tmpfs`: Bootstrap to tmpfs, it's quicker and may reduce wear on flash 
+`use_tmpfs`: Bootstrap to tmpfs, it's quicker and may reduce wear on flash
 (**default**: *yes*)  
-`kernel_cmdline`: Anything you need/want to pass to the kernel (**default**: 
+`kernel_cmdline`: Anything you need/want to pass to the kernel (**default**:
 provided by distro)  
 `layout`: Dictionary of partitions / devices (**required**, see below)  
 `install_ppa`: PPAs to install (**Ubuntu Only**, see below)  
@@ -65,7 +66,7 @@ provided by distro)
 
 ## Partition Layout `layout`
 Layout is a list of dictionaries, every dictionary representing a target
-device. The dictionary contains the device names, as well as another list of 
+device. The dictionary contains the device names, as well as another list of
 dictionaries representing partitions (as you can see, I like my complex data
 structures).
 
@@ -97,14 +98,14 @@ for example *cryptroot*)
 | 8300 | Linux Swap |
 | ef02 | BIOS Boot partition (for grub)|
 | fd00 | Linux RAID |
-| 8e00 | Linux LVM | 
+| 8e00 | Linux LVM |
 
 
 ### Example device with partitions:
 ```
 layout:
   - device: '/dev/sdb'
-    partitions: 
+    partitions:
       - num: 1
         size: 1M
         type: ef02
@@ -114,7 +115,7 @@ layout:
         fs: ext4
         mount: /boot
       - num: 3 # Notice absence of size here, will use full disk
-        type: 8200 
+        type: 8200
         fs: ext4
         mount: /
 ```
@@ -128,12 +129,12 @@ install_ppa:
 
 ## Network Settings, `network`
 This is a list of networks, this supports simple IPv4 config and dhcp, as well
-as specifying your own configuration. 
+as specifying your own configuration.
 
 Network dictionary structure:
 `interface`: Device name of the interface (**required**, example `eth0`, `ens3`)  
 `ipv4`: dict of IPv4 settings (optional)
-`manual`: Manual configuration, see *interfaces*(5) man page for syntax. 
+`manual`: Manual configuration, see *interfaces*(5) man page for syntax.
 
 ipv4 dictionary structure:
 `address`: IP Address/Netmask of the interface or *dhcp* for using dhcp,
@@ -150,19 +151,19 @@ network:
 ```
 network:
   - interface: br0
-    manual: > 
+    manual: >
       auto br0
       iface br0 inet static
       address: 192.0.2.2/24
       bridge_ports en01 en02
       bridge_waitport 0
       bridge_fd 0
-      bridge_stp off 
+      bridge_stp off
 ```
 
 ## Initial users `users`
 Users is a dictionary of users to create, with the user name as key. Options
-are: 
+are:
 `uid`: Desired user ID for the user (optional, default determined by OS)  
 `groups`: List of groups to add the user to  
 `authorized_keys`: List of ssh keys for the user  
@@ -183,21 +184,21 @@ users:
     - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDFtYZBNjtLCe2RVuUslnjNyVS21WbJwKilWiNQGInbo/S590J+aBu2wAhqJA5rgejRzvMHqHvfKAia12d90edoDRT8Cab+vlTxXjG1dlGA8goq4ptBv2C9t2qpYnanZDRYiEJaL/pbR6TzsLllfSvRUGtCrNGpXRl+GqLAophShNC3GUlk+2JDm1FjZXpY+qqjmnBxBA26PUivfRUqIHCfZkym2s61z6fKQ+ntwK46fW05sKQqwaYtyQXeYtyi7sTa6hoNTrF8BZLXv/Del1sgyc/nSOp9ybKSTDt6JCVvAZwGZT4ZEMoazo27vpLyD+VrZBkxp+7N4OxnSiF3yZR/ alice@foo
 ```
 
-## ZFS configuration 
+## ZFS configuration
 ### Pool definition `zfs_pool`
 This defines the devices to use for the ZFS pool, you can use devices and
 targets defined in `layout`. A list of dictionaries with the following
 elements:
 
 `poolname`: name of the ZFS pool (**required**, example *rpool*)  
-`devices`: List of devices, you can insert key words like mirror, raidz etc. 
+`devices`: List of devices, you can insert key words like mirror, raidz etc.
 like you would when using zpool create. (**required**, example below)  
 `options`: List of options for the pool  
 `fs_options`: Options for all filesystems in that pool  
 
 ### ZFS Filesystems / Datasets to create `zfs_fs`
 This looks a lot like the pool definition above, again a list of dictionaries
-(they call me the one trick pony). Dictionary definition: 
+(they call me the one trick pony). Dictionary definition:
 
 `path`: Path of the dataset, make sure that they are in the correct order,
 (**required**, example: *rpool/root*)  
@@ -207,7 +208,7 @@ This looks a lot like the pool definition above, again a list of dictionaries
 This is used when you want to use ZFS as your root filesystem. Set it to the
 dataset which you want to use as root, example: *rpool/ROOT/Ubuntu*
 
-### ZFS example: 
+### ZFS example:
 This example is plucked from my own configuration, it will create a lot of
 datasets with different options and should give you a good overview over
 the possibilities.
