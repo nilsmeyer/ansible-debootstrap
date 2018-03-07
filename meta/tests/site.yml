@@ -1,0 +1,10 @@
+---
+- name: Prep and Bootstrap
+  hosts: role.nilsmeyer.debootstrap
+  become: yes
+  gather_facts: yes
+  tasks:
+  - import_role:
+      name: '../ansible-debootstrap'
+  - debug:
+      msg: "foo"
