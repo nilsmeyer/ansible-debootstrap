@@ -1,7 +1,7 @@
 ---
 
 - name: Cursory variable check
-  include: sanity.yml
+  include_tasks: sanity.yml
 
 - name: Install global dependencies
   apt:
@@ -22,31 +22,31 @@
     _mktemp: None
 
 - name: Partition Devices
-  include: partitions.yml
+  include_tasks: partitions.yml
 
 - name: encrypt devices
-  include: encryption.yml
+  include_tasks: encryption.yml
 
 - name: Create filesystems
-  include: fs.yml
+  include_tasks: fs.yml
 
 - name: Create and mount ZFS pools
-  include: zfs.yml
+  include_tasks: zfs.yml
   when: zfs_pool is defined and zfs_fs is defined
 
 - name: mount filesystems
-  include: mount.yml
+  include_tasks: mount.yml
 
 - name: run bootstrap
-  include: bootstrap.yml
+  include_tasks: bootstrap.yml
 
 - name: configure target system
-  include: configure.yml
+  include_tasks: configure.yml
 
 - name: Cleanup
-  include: cleanup.yml
+  include_tasks: cleanup.yml
   when: not skip_umount|default(False)|bool
 
 - name: wipe
-  include: wipe.yml
+  include_tasks: wipe.yml
   when: _role_fail|default(False)
