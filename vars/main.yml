@@ -15,13 +15,12 @@ dependencies:
     - zfsutils-linux
 
 mirrors:
-  jessie: http://httpredir.debian.org/debian
   stretch: http://httpredir.debian.org/debian
+  buster: http://httpredir.debian.org/debian
   xenial: http://archive.ubuntu.com/ubuntu
-  yakkety: http://archive.ubuntu.com/ubuntu
-  zesty: http://archive.ubuntu.com/ubuntu
+  artful: http://archive.ubuntu.com/ubuntu
 
-supported_releases: ['jessie', 'stretch', 'xenial', 'yakkety', 'zesty']
+supported_releases: ['stretch', 'xenial', 'artful', 'bionic', 'buster']
 
 _target_devices: []
 _devices_used: []
@@ -34,12 +33,15 @@ required_packages:
     - locales
   xenial:
     - linux-image-generic
-  yakkety:
+  artful:
     - linux-image-generic
-  jessie:
-    - linux-image-amd64
+  bionic:
+    - linux-image-generic
   strech:
     - linux-image-amd64
+  buster:
+    - linux-image-amd64
+  
 
 _apt_env:
   DEBIAN_FRONTEND: noninteractive

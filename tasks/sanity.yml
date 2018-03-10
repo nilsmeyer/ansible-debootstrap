@@ -7,7 +7,7 @@
 - fail:
     msg: >
       release '{{ release|default('undefined') }}' not defined or supported, has to be one of
-      {{ supported_releases|combine(', ') }}
+      {{ supported_releases|join(', ') }}
   when: release is not defined or release not in supported_releases
 
 - fail:
