@@ -72,6 +72,14 @@
     with_dict: "{{ users }}"
     when: item.value['authorized_keys'] is defined
 
+  - name: create interfaces.d directory
+    file:
+      state: directory
+      dest: "{{ _tgt_root }}/etc/network/interfaces.d"
+      mode: "0755"
+      owner: root
+      group: root
+
   - name: set up networking
     template:
       src: interface.j2
@@ -99,7 +107,7 @@
     with_items: "{{ layout }}"
     when: not item['skip_grub']|default(False)
 
-- rescue:
+  rescue:
   - name: Cleanup
     include: cleanup.yml
 
