@@ -1,0 +1,6 @@
+# <target name>	<source device>		<key file>	<options>
+{% for device in _tgt_devices %}
+{% if _tgt_devices[device]['encrypt']|default(False) %}
+{{ _tgt_devices[device]['target'] }} UUID={{ _tgt_devices[device]['uuid'] }}  none  luks
+{% endif %}
+{% endfor %}

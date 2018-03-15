@@ -8,7 +8,7 @@
 
   - name: set uuids
     set_fact:
-      _partuuids: "{{ _partuuids|default({})|combine({item.0.device + '_' + item.1.num|string: 2147483647|random()|to_uuid()}) }}"
+      _partuuids: "{{ _partuuids|default({})|combine({item.0.device + item.1.num|string: 2147483647|random()|to_uuid()}) }}"
     with_subelements:
       - "{{ layout }}"
       - partitions
@@ -40,7 +40,7 @@
     command: >
       sgdisk -n {{ item.1.num }}:0:{% if item.1.size is defined and item.1.size[0] != '+'%}+{%endif%}{{ item.1.size|default(0) }}
       -t {{ item.1.num }}:{{ item.1.type|default('8200') }}
-      -u {{ item.1.num }}:{{ _partuuids[item.0.device + '_' + item.1.num|string] }} {{ item.0.device }}
+      -u {{ item.1.num }}:{{ _partuuids[item.0.device + item.1.num|string] }} {{ item.0.device }}
     with_subelements:
       - "{{ layout }}"
       - partitions
@@ -53,15 +53,15 @@
 
   - name: store real device for uuid
     set_fact:
-      _tgt_devices: "{{ _tgt_devices|default({})|combine({item.item.value: {'device': item.stdout}}) }}"
+      _tgt_devices: "{{ _tgt_devices|default({})|combine({item.stdout: {'partuuid': item.item.value }}) }}"
     with_items: "{{ _blkid.results }}"
 
   - name: enrich partition data
     set_fact:
       _tgt_devices: >
         {{
-        _tgt_devices|combine({_partuuids[item.0.device + '_' + item.1.num|string]:
-        _tgt_devices[_partuuids[item.0.device + '_' + item.1.num|string]]|combine(item.1)})
+        _tgt_devices|combine({item.0.device + item.1.num|string:
+        _tgt_devices[item.0.device + item.1.num|string]|combine(item.1)})
         }}
     with_subelements:
       - "{{ layout }}"
@@ -72,5 +72,5 @@
   - set_fact:
       _role_fail: True
 
-  - include: wipe.yml
-    when: "not _devices_used|length() > 0"
+  - fail:
+      msg: "Partitioning failed"

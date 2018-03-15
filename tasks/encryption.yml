@@ -13,15 +13,9 @@
     set_fact:
       install_packages: "{{ install_packages + dependencies['encryption'] }}"
 
-  - name: set encryption targets (full device)
-    set_fact:
-      _encrypt_targets: "{{ _encrypt_targets|default({})|combine({item.device: item}) }}"
-    with_items: "{{ layout }}"
-    when: item.encrypt|default(False)
-
   - name: set encryption targets (partition)
     set_fact:
-      _encrypt_targets: "{{ _encrypt_targets|default({})|combine({item.value['device']: item.value}) }}"
+      _encrypt_targets: "{{ _encrypt_targets|default({})|combine({item.key: item.value}) }}"
     with_dict: "{{ _tgt_devices }}"
     when: item.value['encrypt']|default(False)
 
@@ -40,18 +34,20 @@
   - name: store data for target devices
     set_fact:
       _tgt_devices: >
-        {{ _tgt_devices|combine({item.stdout:
-        item.item.value|combine({'device': '/dev/mapper/' +  item.item.value['target'], 'encrypt': None,
+        {{ _tgt_devices|combine({'/dev/mapper/' +  item.item.value['target']:
+        item.item.value|combine({'luksuuid': item.stdout, 'encrypt': None,
         'passphrase': None, 'target': None, 'use_dev': True})}) }}
     with_items: "{{ _luksuuid.results }}"
 
   - name: open luks Devices
     shell: >
       echo '{{ item.value['passphrase'] }}' |
-      cryptsetup -q luksOpen {{ item.value['device'] }} {{ item.value['target'] }}
+      cryptsetup -q luksOpen {{ item.key }} {{ item.value['target'] }}
     with_dict: "{{ _encrypt_targets|default({}) }}"
     register: _luksopen
 
-- rescue:
-  - include: cleanup.yml
-  - include: wipe.yml
+  rescue:
+  - include_tasks: cleanup.yml
+  - include_tasks: wipe.yml
+  - fail:
+      msg: "Setting up Encryption failed"

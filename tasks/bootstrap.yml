@@ -22,33 +22,60 @@
     _bootstrap_target: "{{ _tgt_root }}"
   when: not use_tmpfs
 
-- name: run bootstrap
-  command: "eatmydata debootstrap {{ release }} {{ _bootstrap_target }} {{ use_mirror|default(mirrors[release]) }}"
+- block:
+  - name: run bootstrap
+    command: "eatmydata debootstrap {{ release }} {{ _bootstrap_target }} {{ use_mirror|default(mirrors[release]) }}"
 
-- name: bind mount pseudo filesystems
-  shell: "mkdir {{ _bootstrap_target }}/{{ item }}; mount --bind /{{ item }} {{ _bootstrap_target }}/{{ item }} warn=no"
-  register: _pseudomount
-  with_items:
-  - proc
-  - sys
-  - dev
-  - dev/pts
+  - name: bind mount pseudo filesystems
+    shell: "mkdir {{ _bootstrap_target }}/{{ item }}; mount --bind /{{ item }} {{ _bootstrap_target }}/{{ item }} warn=no"
+    register: _pseudomount
+    with_items:
+    - proc
+    - sys
+    - dev
+    - dev/pts
 
-- name: Link mtab
-  file:
-    src: "/proc/mounts"
-    dest: "{{ _bootstrap_target }}/etc/mtab"
-    state: link
+  - name: Link mtab
+    file:
+      src: "/proc/mounts"
+      dest: "{{ _bootstrap_target }}/etc/mtab"
+      state: link
 
-- name: build list of packages to install
-  set_fact:
-    _install: "{{ install_packages + required_packages['all'] + required_packages[release] }}"
+  - name: build list of packages to install
+    set_fact:
+      _install: "{{ install_packages + required_packages['all'] + required_packages[release] }}"
 
-- debug:
-    msg: "Going to install: {{ _install|join(', ') }}"
-    verbosity: 2
+  - debug:
+      msg: "Going to install: {{ _install|join(', ') }}"
+      verbosity: 2
+
+  rescue:
+  - name: cleanup
+    include_tasks: cleanup.yml
+
+  - name: wipe
+    include_tasks: wipe.yml
 
 - block:
+  # add more sources for apt
+  - name: update sources.list
+    template:
+      src: "sources_ubuntu.list"
+      dest: "{{ _bootstrap_target }}/etc/apt/sources.list"
+      mode: "0644"
+      owner: root
+      group: root
+    when: release in ["xenial", "artful", "bionic"]
+
+  - name: update sources.list
+    template:
+      src: "sources_debian.list"
+      dest: "{{ _bootstrap_target }}/etc/apt/sources.list"
+      mode: "0644"
+      owner: root
+      group: root
+    when: release in ["stretch", "buster", "sid"]
+
   - name: update sources
     command: "chroot {{ _bootstrap_target }} apt-get update"
 

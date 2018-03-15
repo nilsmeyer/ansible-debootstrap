@@ -13,18 +13,21 @@ dependencies:
     - cryptsetup
   zfs:
     - zfsutils-linux
+    - zfs-initramfs
 
 mirrors:
   stretch: http://httpredir.debian.org/debian
   buster: http://httpredir.debian.org/debian
   xenial: http://archive.ubuntu.com/ubuntu
   artful: http://archive.ubuntu.com/ubuntu
+  bionic: http://archive.ubuntu.com/ubuntu
 
 supported_releases: ['stretch', 'xenial', 'artful', 'bionic', 'buster']
 
 _target_devices: []
 _devices_used: []
 _mountlist: []
+_encrypt_targets: {}
 
 required_packages:
   all:
@@ -41,7 +44,7 @@ required_packages:
     - linux-image-amd64
   buster:
     - linux-image-amd64
-  
+
 
 _apt_env:
   DEBIAN_FRONTEND: noninteractive
