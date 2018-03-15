@@ -140,3 +140,6 @@
   - name: wipe
     include_tasks: wipe.yml
     when: not skip_umount
+
+  - fail:
+      msg: "Configuratation failed"
