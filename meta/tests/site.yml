@@ -1,4 +1,27 @@
 ---
+
+# This will gather the locally available ssh keys for the second stage
+- name: gather local ssh keys for second stage
+  hosts: localhost
+  tasks:
+  - name: add ssh key for vagrant to agent
+    command: "ssh-add {{ playbook_dir }}/.vagrant/machines/default/virtualbox/private_key"
+  - name: print keys
+    command: ssh-add -L
+    register: _local_keys
+  - fail:
+      msg: "No keys in ssh-agent, please add your keys to the agent"
+    when: _local_keys.stdout == ""
+  - name: copy keys
+    set_fact:
+      _ssh_keys: "{{ _local_keys.stdout_lines }}"
+
+- name: Add keys to vagrant user
+  hosts: role.nilsmeyer.debootstrap
+  tasks:
+  - set_fact:
+      users: "{{ users|combine({'vagrant': users['vagrant']|combine({'authorized_keys': hostvars['localhost']['_ssh_keys']})}) }}"
+
 - name: Prep and Bootstrap
   hosts: role.nilsmeyer.debootstrap
   become: yes
@@ -6,5 +29,3 @@
   tasks:
   - import_role:
       name: '../ansible-debootstrap'
-  - debug:
-      msg: "foo"
