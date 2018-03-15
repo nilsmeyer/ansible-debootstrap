@@ -24,7 +24,7 @@ Vagrant.configure("2") do |config|
     if !File.exist?(tgtdisk)
       vb.customize ['createhd', '--filename', tgtdisk, '--variant', 'Fixed', '--size', 20 * 1024]
     end
-    vb.customize ['storageattach', :id, '--storagectl', 'SCSI', '--port', 2, '--device', 0, '--type', 'hdd', '--medium', tgtdisk]
+    vb.customize ['storageattach', :id, '--storagectl', 'SCSI', '--port', 2, '--device', 0, '--type', 'hdd', '--discard', '--medium', tgtdisk]
     vb.customize ["modifyvm", :id, "--uartmode1", "disconnected"]
   end
 

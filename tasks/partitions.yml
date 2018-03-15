@@ -46,7 +46,7 @@
       - partitions
       - "{{ {'skip_missing': True} }}"
 
-  - name: find devices for uuid
+  - name: find devices for partuuid
     command: "blkid -l -o device -t PARTUUID='{{ item.value }}'"
     register: _blkid
     with_dict: "{{ _partuuids }}"
@@ -73,3 +73,4 @@
       _role_fail: True
 
   - include: wipe.yml
+    when: "not _devices_used|length() > 0"
