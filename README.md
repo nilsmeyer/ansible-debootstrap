@@ -12,7 +12,7 @@ is strongly suggested you use ansible-vault here)
 * **ZFS** is supported, even/especially as a root device
 * Pre-select packages to be installed, also supports using PPA on linux
 * Place SSH keys for your users
-* Will create new, stronger SSH Keys
+* Will create new, stronger SSH Host Keys
 
 ## Limitations
 * You can't have the same names for ZFS pools and crypto devices
@@ -26,9 +26,14 @@ is strongly suggested you use ansible-vault here)
 * Ubuntu
   * xenial
   * artful
+  * bionic
+
+Debian buster (testing) is currently untested. 
 
 Minor modifications will likely make it possible to install newer and perhaps
-older versions as well.
+older versions as well, or even other Debian based distributions. There are
+some sanity checks executed, depending on lists in vars/main.yml, so you would
+need to add the distribution codename there. Pull requests welcome.
 
 ## Host system caveats
 
@@ -41,7 +46,9 @@ be cleaned up afterwards.
 * It will install ZFS tools when using ZFS
 
 Normally it is assumed that a some sort of PXE or USB rescue system is used,
-some caveats apply otherwise with regards to device names.
+some caveats apply otherwise with regards to device names. As an example, you
+can't use the same name for any device mapper devices (luks encryption) or ZFS
+pools. 
 
 # Configuration
 ## Global variables
@@ -277,3 +284,11 @@ zfs_fs:
 
 zfs_root: 'rpool/ROOT/ubuntu'
 ```
+
+## Test playbook for vagrant
+The directory meta/tests contains a test playbook, inventory and Vagrantfile for
+local testing. The vagrant box by default contains two devices, one for the
+source vagrant box and a target device for your install (/dev/sdb). To test
+your new installation you would have to switch boot devices in the SeaBIOS boot
+menu (easily achieved via the VirtualBox GUI). **Currently, only VirtualBox is
+supported**.
