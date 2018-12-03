@@ -38,7 +38,7 @@ required_packages:
     - linux-image-generic
   jessie:
     - linux-image-amd64
-  strech:
+  stretch:
     - linux-image-amd64
 
 _apt_env:
