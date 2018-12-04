@@ -91,6 +91,11 @@
       mode: "0644"
     when: tgt_hostname is defined
 
+  - name: trigger udev to detect new block devices
+    command: udevadm trigger
+  - name: wait for udev to complete its refresh
+    command: udevadm settle
+
   - name: set up grub
     command: chroot {{ _tgt_root }} update-grub
 
