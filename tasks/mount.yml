@@ -18,7 +18,7 @@
 - name: create mountpoints and mount
   shell: >
     if [ ! -d {{ _tgt_root }}{{ _mountpoints[item]['mount'] }} ];
-    then mkdir {{ _tgt_root }}{{ _mountpoints[item]['mount'] }}; fi;
+    then mkdir -p {{ _tgt_root }}{{ _mountpoints[item]['mount'] }}; fi;
     mount {{ _mountpoints[item]['device'] }} {{ _tgt_root }}{{ _mountpoints[item]['mount'] }}
   with_items: "{{ _mountlist|sort }}"
   register: _mount
@@ -26,7 +26,7 @@
 - name: "zfs legacy: create mountpoints and mount"
   shell: >
     if [ ! -d {{ _tgt_root }}{{ item['mount'] }} ];
-    then mkdir {{ _tgt_root }}{{ item['mount'] }}; fi;
+    then mkdir -p {{ _tgt_root }}{{ item['mount'] }}; fi;
     mount -t zfs {{ item['path'] }} {{ _tgt_root }}{{ item['mount'] }}
   with_items: "{{ zfs_fs|default([]) }}"
   when: item['mount'] is defined
