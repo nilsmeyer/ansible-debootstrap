@@ -19,6 +19,7 @@
   shell: >
     zpool export {{ item['poolname']|default('rpool') }}
   with_items: zfs_pool|default([])|reverse
+  when: zfs_pool is defined and zfs_fs is defined
 
 - name: Close luks devices
   command: >
