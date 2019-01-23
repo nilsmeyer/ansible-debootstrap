@@ -40,7 +40,9 @@ required_packages:
     - linux-image-generic
   bionic:
     - linux-image-generic
-  strech:
+  jessie:
+    - linux-image-amd64
+  stretch:
     - linux-image-amd64
   buster:
     - linux-image-amd64

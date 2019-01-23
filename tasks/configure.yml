@@ -123,6 +123,12 @@
 
   - name: update initramfs
     command: chroot {{ _tgt_root }} update-initramfs -u -k all
+  
+  - name: trigger udev to detect new block devices
+    command: udevadm trigger
+  
+  - name: wait for udev to complete its refresh
+    command: udevadm settle
 
   - name: set up grub
     command: chroot {{ _tgt_root }} update-grub
