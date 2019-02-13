@@ -19,10 +19,10 @@ mirrors:
   stretch: http://httpredir.debian.org/debian
   buster: http://httpredir.debian.org/debian
   xenial: http://archive.ubuntu.com/ubuntu
-  artful: http://archive.ubuntu.com/ubuntu
   bionic: http://archive.ubuntu.com/ubuntu
+  cosmic: http://archive.ubuntu.com/ubuntu
 
-supported_releases: ['stretch', 'xenial', 'artful', 'bionic', 'buster']
+supported_releases: ['stretch', 'xenial', 'bionic', 'buster', 'cosmic']
 
 _target_devices: []
 _devices_used: []
