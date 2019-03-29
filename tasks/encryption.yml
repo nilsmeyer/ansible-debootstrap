@@ -9,21 +9,6 @@
   set_fact:
     cryptsetup_version: "{{ _cryptsetup_version.stdout[11:] }}"
 
-# Install Cryptsetup 2.0 from buster repo when on stretch, useful for Hetzner rescue
-- block:
-  - name: Purge installed cryptsetup
-    apt:
-      state: absent
-      name: cryptsetup cryptsetup-bin
-      purge: true
-
-  - set_fact:
-      _cryptsetup_version:
-        stdout: "2"
-
-  when:
-  - cryptsetup_version[0]|int < 2 and update_cryptsetup|default(False)
-
 - block:
   - name: install dependencies
     apt:
