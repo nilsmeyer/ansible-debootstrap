@@ -1,36 +1,65 @@
 ---
 
+- name: fetch cryptsetup version
+  command: "cryptsetup --version"
+  changed_when: no
+  register: _cryptsetup_version
+
+- name: register version
+  set_fact:
+    cryptsetup_version: "{{ _cryptsetup_version.stdout[11:] }}"
+
+# Install Cryptsetup 2.0 from buster repo when on stretch, useful for Hetzner rescue
+- block:
+  - name: Purge installed cryptsetup
+    apt:
+      state: absent
+      name: cryptsetup cryptsetup-bin
+      purge: true
+
+  - set_fact:
+      _cryptsetup_version:
+        stdout: "2"
+
+  when:
+  - cryptsetup_version[0]|int < 2 and update_cryptsetup|default(False)
+
 - block:
   - name: install dependencies
     apt:
-      name: "{{ item }}"
+      name: "{{ dependencies.encryption }}"
       state: latest
       update_cache: no # skip cache check since we already ran apt
-    with_items:
-    - "{{ dependencies.encryption }}"
 
   - name: add dependencies to install list
     set_fact:
       install_packages: "{{ install_packages + dependencies['encryption'] }}"
 
-  - name: set encryption targets (full device)
-    set_fact:
-      _encrypt_targets: "{{ _encrypt_targets|default({})|combine({item.device: item}) }}"
-    with_items: "{{ layout }}"
-    when: item.encrypt|default(False)
-
   - name: set encryption targets (partition)
     set_fact:
-      _encrypt_targets: "{{ _encrypt_targets|default({})|combine({item.value['device']: item.value}) }}"
+      _encrypt_targets: "{{ _encrypt_targets|default({})|combine({item.key: item.value}) }}"
     with_dict: "{{ _tgt_devices }}"
     when: item.value['encrypt']|default(False)
 
-  - name: create encrypted devices
+  - name: create encrypted devices (LUKS2)
     shell: >
       echo '{{ item.value['passphrase'] }}' | cryptsetup -q --cipher {{ item.value['cipher']|default('aes-xts-plain64') }}
+      --type {{ item.value['luks-type']|default('luks2') }} --sector-size {{ item.value['luks-sector-size']|default(4096) }}
       --key-size {{ item.value['key-size']|default('256') }}  --hash {{ item.value['hash']|default('sha512') }}
       --iter-time {{ item.value['iter-time']|default('5000') }} luksFormat {{ item.key }}
     with_dict: "{{ _encrypt_targets|default({}) }}"
+    when:
+    - cryptsetup_version[0]|int >= 2
+
+  - name: create encrypted devices (LUKS1)
+    shell: >
+      echo '{{ item.value['passphrase'] }}' | cryptsetup -q --cipher {{ item.value['cipher']|default('aes-xts-plain64') }}
+      --type {{ item.value['luks-type']|default('luks') }}
+      --key-size {{ item.value['key-size']|default('256') }}  --hash {{ item.value['hash']|default('sha512') }}
+      --iter-time {{ item.value['iter-time']|default('5000') }} luksFormat {{ item.key }}
+    with_dict: "{{ _encrypt_targets|default({}) }}"
+    when:
+    - _cryptsetup_version.stdout[0]|int < 2
 
   - name: fetch luks UUID for device
     command: "cryptsetup luksUUID {{ item.key }}"
@@ -40,18 +69,20 @@
   - name: store data for target devices
     set_fact:
       _tgt_devices: >
-        {{ _tgt_devices|combine({item.stdout:
-        item.item.value|combine({'device': '/dev/mapper/' +  item.item.value['target'], 'encrypt': None,
+        {{ _tgt_devices|combine({'/dev/mapper/' +  item.item.value['target']:
+        item.item.value|combine({'luksuuid': item.stdout, 'encrypt': None,
         'passphrase': None, 'target': None, 'use_dev': True})}) }}
     with_items: "{{ _luksuuid.results }}"
 
   - name: open luks Devices
     shell: >
       echo '{{ item.value['passphrase'] }}' |
-      cryptsetup -q luksOpen {{ item.value['device'] }} {{ item.value['target'] }}
+      cryptsetup -q luksOpen {{ item.key }} {{ item.value['target'] }}
     with_dict: "{{ _encrypt_targets|default({}) }}"
     register: _luksopen
 
-- rescue:
-  - include: cleanup.yml
-  - include: wipe.yml
+  rescue:
+  - include_tasks: cleanup.yml
+  - include_tasks: wipe.yml
+  - fail:
+      msg: "Setting up Encryption failed"

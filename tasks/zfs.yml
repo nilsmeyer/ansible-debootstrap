@@ -2,11 +2,9 @@
 
 - name: install dependencies
   apt:
-    name: "{{ item }}"
+    name: "{{ dependencies.zfs }}"
     state: latest
     update_cache: no # skip cache check since we already ran apt
-  with_items:
-  - "{{ dependencies.zfs }}"
 
 - name: add dependencies to install list
   set_fact:

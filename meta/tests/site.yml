@@ -1,0 +1,31 @@
+---
+
+- name: gather local ssh keys for second stage
+  hosts: localhost
+  gather_facts: no
+  tasks:
+  - name: add ssh key for vagrant to agent
+    command: "ssh-add {{ playbook_dir }}/.vagrant/machines/default/virtualbox/private_key"
+  - name: print keys
+    command: ssh-add -L
+    register: _local_keys
+  - fail:
+      msg: "No keys in ssh-agent, please add your keys to the agent"
+    when: _local_keys.stdout == ""
+  - name: copy keys
+    set_fact:
+      _ssh_keys: "{{ _local_keys.stdout_lines }}"
+
+- name: Prep and Bootstrap
+  hosts: role.nilsmeyer.debootstrap
+  become: yes
+  gather_facts: yes
+  tasks:
+  - name: run bootstrap
+    import_role:
+      name: 'ansible-debootstrap'
+  - name: cleanup and umount
+    include_role:
+      name: 'ansible-debootstrap'
+      tasks_from: "cleanup.yml"
+    when: not skip_umount|default(False)

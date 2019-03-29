@@ -1,0 +1,113 @@
+---
+
+all:
+  hosts:
+    ansible-debootstrap
+  children:
+    role.nilsmeyer.debootstrap:
+      hosts:
+        ansible-debootstrap:
+          ansible_host: 127.0.0.1
+          ansible_port: 2200
+          ansible_user: vagrant
+          ansible_ssh_private_key_file: "meta/tests/.vagrant/machines/default/virtualbox/private_key"
+          release: bionic
+          layout:
+            - device: '/dev/sdb'
+              partitions:
+                - num: 1
+                  size: 1M
+                  type: ef02
+                - num: 2
+                  size: 1022M
+                  type: 8200
+                  fs: ext4
+                  mount: /boot
+                - num: 3
+                  type: 8200
+                  fs: zfs_member
+                  encrypt: yes
+                  luks-sector-size: 4096
+                  passphrase: "TestPassPhrase"
+                  target: cryptroot
+
+          zfs_pool:
+            - poolname: rpool
+              devices:
+              - /dev/mapper/cryptroot
+              options:
+              - ashift=12
+              fs_options:
+              - canmount=off
+              - mountpoint=/
+              - compression=lz4
+              - atime=off
+              - normalization=formD
+
+          zfs_fs:
+            - path: 'rpool/ROOT'
+              options:
+              - canmount=off
+              - mountpoint=none
+            - path: 'rpool/ROOT/ubuntu'
+              options:
+              - mountpoint=/
+            - path: 'rpool/home'
+              options:
+              - setuid=off
+            - path: 'rpool/home/root'
+              options:
+              - mountpoint=/root
+            - path: 'rpool/var'
+              options:
+              - exec=off
+              - setuid=off
+              - mountpoint=legacy
+              mount: /var
+            - path: 'rpool/var/cache'
+              options:
+              - 'com.sun:auto-snapshot=false'
+              - mountpoint=legacy
+              mount: /var/cache
+            - path: 'rpool/var/log'
+              optons:
+              - mountpoint=legacy
+              mount: /var/log
+            - path: 'rpool/var/spool'
+              optons:
+              - mountpoint=legacy
+              mount: /var/spool
+            - path: 'rpool/var/tmp'
+              optons:
+              - mountpoint=legacy
+              mount: /var/tmp
+            - path: 'rpool/var/lib'
+              optons:
+              - mountpoint=legacy
+              mount: /var/lib
+            - path: 'rpool/var/lib/dpkg'
+              options:
+              - exec=on
+              - mountpoint=legacy
+              mount: /var/lib/dpkg
+            - path: 'rpool/srv'
+
+          zfs_root: 'rpool/ROOT/ubuntu'
+
+          kernel_cmdline: "boot=zfs text"
+          root_password: $6$rkt5rwc5s/ig$YfC62f9cskQm3gT7ojafsK14xe0exg8bDbV5RX/wdi5eqr2Q2pnCTMNNj0m5jd/E8hPBntyqDzh1cCfLZgh6P/  # == vagrant
+
+          network:
+            - interface: enp0s3
+              ipv4:
+                address: 'dhcp'
+
+          users:
+            vagrant:
+              uid: 1000
+              groups:
+              - sudo
+              authorized_keys: {}
+
+          tgt_hostname: ansible-debootstrap
+          use_mirror: http://de.archive.ubuntu.com/ubuntu

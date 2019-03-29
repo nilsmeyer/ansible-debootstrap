@@ -1,0 +1,51 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "bento/ubuntu-18.04"
+
+  # 1. Do an apt upgrade and install prerequisites for ansible
+  config.vm.provision "shell" do |s|
+    s.inline = <<-SHELL
+      export DEBIAN_FRONTEND=noninteractive
+      apt-get update -y
+      apt-get dist-upgrade -yq -o "Dpkg::Options::=--force-confdef" -o "Dpkg::Options::=--force-confold"
+      apt-get install -o "Dpkg::Options::=--force-confdef" -o "Dpkg::Options::=--force-confold" -yq lvm2 python2.7-minimal python-minimal python-apt debconf debconf-utils
+    SHELL
+  end
+
+  config.vm.hostname = "ansible-debootstrap"
+
+  config.vm.provider "virtualbox" do |vb|
+    vb.name = "ansible-debootstrap"
+    # Disconnect serial console
+    vb.customize [ "modifyvm", :id, "--uart1", "off" ]
+    # Emulate more modern hardware, disable superfluous
+    vb.customize [ "modifyvm", :id, "--chipset", "ich9" ]
+    vb.customize [ "modifyvm", :id, "--paravirtprovider", "kvm" ]
+    vb.customize [ "modifyvm", :id, "--vram", "64" ]
+    vb.customize [ "modifyvm", :id, "--audio", "none" ]
+    vb.default_nic_type = "virtio"
+    vb.memory = 2048
+    vb.cpus = 4
+
+    # Add IO Cache, Remove IDE Controller and add target disks
+    vb.customize [ 'storagectl', :id, '--name', 'SATA Controller', '--hostiocache', 'on' ]
+    vb.customize [ 'storagectl', :id, '--name', 'IDE Controller', '--remove' ]
+    tgtdisk = Dir.pwd + "/.vagrant/debootstrap-bionic-.vdi"
+    if !File.exist?(tgtdisk)
+      vb.customize [ 'createmedium', 'disk', '--filename', tgtdisk, '--variant', 'Fixed', '--size', 8 * 1024 ]
+    end
+    vb.customize [ 'storageattach', :id, '--storagectl', 'SATA Controller', '--port', 1, '--type', 'hdd', '--discard', 'on', '--nonrotational', 'on', '--medium', tgtdisk ]
+    tgtdisk = Dir.pwd + "/.vagrant/debootstrap-bionic-sdb.vdi"
+    if !File.exist?(tgtdisk)
+      vb.customize [ 'createmedium', 'disk', '--filename', tgtdisk, '--variant', 'Fixed', '--size', 8 * 1024 ]
+    end
+    vb.customize [ 'storageattach', :id, '--storagectl', 'SATA Controller', '--port', 2, '--type', 'hdd', '--discard', 'on', '--nonrotational', 'on', '--medium', tgtdisk ]
+  end
+
+  config.ssh.forward_agent = true
+  config.ssh.insert_key = true
+  # config.ssh.keys_only = false
+
+end

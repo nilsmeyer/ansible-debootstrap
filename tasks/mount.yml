@@ -3,7 +3,7 @@
 - name: create mountpoint dictionary
   set_fact:
     _mountpoints: >
-      {{ _mountpoints|default({})|combine({item.value['mount']: item.value}) }}
+      {{ _mountpoints|default({})|combine({item.value['mount']: item.value|combine({'device': item.key })}) }}
   with_dict: "{{ _tgt_devices }}"
   when: >
     not item.value['encrypt']|default(False) and item.value['fs']|default('undefined') in ['ext4', 'xfs'] and
