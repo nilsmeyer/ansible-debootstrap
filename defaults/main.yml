@@ -16,8 +16,10 @@ text_console: no
 
 ssh_host_keys:
 - algo: 'ed25519'
-  keylen: '1337'
+  keylen: '256'
 - algo: 'ecdsa'
   keylen: '521'
 - algo: 'rsa'
   keylen: '4096'
+
+dbstrp_mountpoint: /mnt/bootstrap

@@ -34,6 +34,7 @@ required_packages:
     - grub-pc
     - openssh-server
     - locales
+    - python-minimal # assuming you want to run ansible, too
   bionic:
     - linux-image-generic
   cosmic:

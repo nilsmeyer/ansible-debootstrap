@@ -1,5 +1,8 @@
 ---
 
+- name: remove bootstrap user
+  command: chroot {{ dbstrp_mountpoint }} userdel debootstrap
+
 - name: umount pseudo filesystems
   command: umount {{ _tgt_root }}/{{ item }}
   with_items:

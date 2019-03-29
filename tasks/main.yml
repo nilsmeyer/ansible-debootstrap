@@ -3,50 +3,138 @@
 - name: Cursory variable check
   include_tasks: sanity.yml
 
+- name: install ZFS ppa for bionic
+  apt_repository:
+    repo: ppa:jonathonf/zfs
+  when: ansible_distribution == "Ubuntu" and ansible_distribution_release == "bionic" and zfs_pool is defined
+
 - name: Install global dependencies
   apt:
-    name: "{{ item }}"
+    name: "{{ dependencies.global }}"
     state: latest
     update_cache: yes
     cache_valid_time: "{{ debian_cache_valid_time|default(7200) }}"
-  with_items:
-  - "{{ dependencies.global }}"
 
-- name: create mountpoint
-  register: _mktemp
-  command: mktemp -d
+- name: check if already bootstrapped
+  stat:
+    path: "{{ dbstrp_mountpoint }}/.bootstrap_complete"
+  register: _stat_mount
 
-- name: set mountpoint
-  set_fact:
-    _tgt_root: "{{ _mktemp.stdout }}"
-    _mktemp: None
+- set_fact:
+    bootstrapped: "{{ _stat_mount.stat.exists }}"
 
-- name: Partition Devices
-  include_tasks: partitions.yml
+- block:
+    - name: print keys
+      command: ssh-add -L
+      register: _local_keys
 
-- name: encrypt devices
-  include_tasks: encryption.yml
+    - fail:
+        msg: "No keys in ssh-agent, please add your keys to the agent"
+      when: _local_keys.stdout == ""
 
-- name: Create filesystems
-  include_tasks: fs.yml
+    - name: copy keys
+      set_fact:
+        agent_ssh_keys: "{{ _local_keys.stdout_lines }}"
 
-- name: Create and mount ZFS pools
-  include_tasks: zfs.yml
-  when: zfs_pool is defined and zfs_fs is defined
+  delegate_to: localhost
+  become: no
+  when: agent_ssh_keys is not defined
 
-- name: mount filesystems
-  include_tasks: mount.yml
+- block:
+    - name: create list of target devices
+      set_fact:
+        _target_devices: "{{ _target_devices + [item.device] }}"
+      with_items: "{{ layout }}"
 
-- name: run bootstrap
-  include_tasks: bootstrap.yml
+    - name: wipe devices
+      include_tasks: wipe.yml
+      when: wipe|default('') == "ABSOLUTELY"
 
-- name: configure target system
-  include_tasks: configure.yml
+    - name: create mountpoint
+      file:
+        state: directory
+        path: "{{ dbstrp_mountpoint }}"
 
-- name: Cleanup
-  include_tasks: cleanup.yml
-  when: not skip_umount|default(False)|bool
+    - name: setup bootstrap user
+      user:
+        name: debootstrap
+        create_home: no
+        home: "{{ dbstrp_mountpoint }}"
+        shell: "/bin/bash"
+        groups:
+          - sudo
+        uid: 65533
 
-- name: wipe
-  include_tasks: wipe.yml
-  when: _role_fail|default(False)
+    - name: chroot user via ssh
+      blockinfile:
+        path: "/etc/ssh/sshd_config"
+        state: present
+        block: >
+          Match user debootstrap
+              ChrootDirectory {{ dbstrp_mountpoint }}
+              AuthorizedKeysFile /tmp/authorized_keys
+      register: _ssh_config
+
+    - name: restart sshd
+      service:
+        name: ssh
+        state: restarted
+      when: _ssh_config.changed
+
+    - name: set mountpoint
+      set_fact:
+        _tgt_root: "{{ dbstrp_mountpoint }}"
+        _mktemp: None
+
+    - name: Partition Devices
+      include_tasks: partitions.yml
+
+    - name: encrypt devices
+      include_tasks: encryption.yml
+
+    - name: Create filesystems
+      include_tasks: fs.yml
+
+    - name: Create and mount ZFS pools
+      include_tasks: zfs.yml
+      when: zfs_pool is defined and zfs_fs is defined
+
+    - name: mount filesystems
+      include_tasks: mount.yml
+
+    - name: run bootstrap
+      include_tasks: bootstrap.yml
+
+    - name: configure system
+      include_tasks: configure.yml
+
+    - name: create bootstrap user on target
+      command: >
+        chroot {{ dbstrp_mountpoint }} useradd -m -U -u 65533 -G sudo -s /bin/bash debootstrap
+
+    - name: create ssh directory for bootstrap user
+      file:
+        state: directory
+        path: "{{ dbstrp_mountpoint }}/home/debootstrap/.ssh"
+        owner: debootstrap
+
+    - name: setup keys for bootstrap user
+      authorized_key:
+        key: "{{ item }}"
+        path: "/tmp/authorized_keys"
+        user: debootstrap
+      with_items: "{{ agent_ssh_keys }}"
+
+    - name: mark as bootstrapped
+      copy:
+        dest: "/root/.bootstrap_complete"
+        content: ""
+        owner: root
+        group: root
+        mode: 0600
+
+    - name: register bootstrapped fact
+      set_fact:
+        bootstrapped: yes
+
+  when: not bootstrapped or wipe == "ABSOLUTELY"

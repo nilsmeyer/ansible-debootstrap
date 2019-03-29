@@ -23,12 +23,11 @@ is strongly suggested you use ansible-vault here)
 ## Supported distributions
 * Debian
   * Stretch
+  * Buster (untested)
 * Ubuntu
   * bionic (18.04 LTS)
   * cosmic (18.10)
   * disco (19.04)
-
-Debian buster (testing) is currently untested. 
 
 Minor modifications will likely make it possible to install newer and perhaps
 older versions as well, or even other Debian based distributions. There are
@@ -65,8 +64,6 @@ provided by distro)
 `layout`: Dictionary of partitions / devices (**required**, see below)  
 `install_ppa`: PPAs to install (**Ubuntu Only**, see below)  
 `install_packages`: List of packages to install  
-`network`: Network configuration (**required**, see below)  
-`users`: User setup (**required**, see below)  
 `zfs_pool`: ZFS pool (see ZFS section)  
 `zfs_fs`: ZFS filesystems (see ZFS section)  
 `zfs_root`: ZFS devices to use as root
@@ -139,63 +136,6 @@ Simple list of PPA to use, example:
 ```
 install_ppa:
   - ppa:nils-nm/zfs-linux-unofficial
-```
-
-## Network Settings, `network`
-This is a list of networks, this supports simple IPv4 config and dhcp, as well
-as specifying your own configuration.
-
-Network dictionary structure:
-`interface`: Device name of the interface (**required**, example `eth0`, `ens3`)  
-`ipv4`: dict of IPv4 settings (optional)
-`manual`: Manual configuration, see *interfaces*(5) man page for syntax.
-
-ipv4 dictionary structure:
-`address`: IP Address/Netmask of the interface or *dhcp* for using dhcp,
-(**required**, example: *192.0.2.56/24*)  
-`gateway`: Default Gateway, (**optional**, example: *192.0.2.1*)  
-
-### Examples
-```
-network:
-  - interface: eth0
-      address: dhcp
-```
-
-```
-network:
-  - interface: br0
-    manual: >
-      auto br0
-      iface br0 inet static
-      address: 192.0.2.2/24
-      bridge_ports en01 en02
-      bridge_waitport 0
-      bridge_fd 0
-      bridge_stp off
-```
-
-## Initial users `users`
-Users is a dictionary of users to create, with the user name as key. Options
-are:
-`uid`: Desired user ID for the user (optional, default determined by OS)  
-`groups`: List of groups to add the user to  
-`authorized_keys`: List of ssh keys for the user  
-
-This is rather preliminary, the purpose is to add a user you can use for later
-provisioning
-
-### Example
-```
-users:
-  alice:
-    uid: 1000
-    groups:
-    - sudo
-    authorized_keys:
-    - ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBPvGHsJfISA3DPXVBIrgJYKqD/Myo+BrSBPGbFIm9QTuasn9lnYD9TMHPF7l/OnRnA7DApMVN7A83ppy2O4aXt8= alice@foo
-    - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIISRBncDXU4SgIY+FL+t116/6NArI+2vmjDpXFfU9Zs6 alice@foo
-    - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDFtYZBNjtLCe2RVuUslnjNyVS21WbJwKilWiNQGInbo/S590J+aBu2wAhqJA5rgejRzvMHqHvfKAia12d90edoDRT8Cab+vlTxXjG1dlGA8goq4ptBv2C9t2qpYnanZDRYiEJaL/pbR6TzsLllfSvRUGtCrNGpXRl+GqLAophShNC3GUlk+2JDm1FjZXpY+qqjmnBxBA26PUivfRUqIHCfZkym2s61z6fKQ+ntwK46fW05sKQqwaYtyQXeYtyi7sTa6hoNTrF8BZLXv/Del1sgyc/nSOp9ybKSTDt6JCVvAZwGZT4ZEMoazo27vpLyD+VrZBkxp+7N4OxnSiF3yZR/ alice@foo
 ```
 
 ## ZFS configuration
@@ -294,8 +234,8 @@ zfs_root: 'rpool/ROOT/ubuntu'
 
 ## Test playbook for vagrant
 The directory meta/tests contains a test playbook, inventory and Vagrantfile for
-local testing. The vagrant box by default contains two devices, one for the
-source vagrant box and a target device for your install (/dev/sdb). To test
-your new installation you would have to switch boot devices in the SeaBIOS boot
-menu (easily achieved via the VirtualBox GUI). **Currently, only VirtualBox is
-supported**.
+local testing. The vagrant box by default contains three devices, one for the
+source vagrant box and target devices for your install (/dev/sdb, /dev/sdc). To
+test your new installation you would have to switch boot devices in the SeaBIOS
+boot menu (easily achieved via the VirtualBox GUI). **Currently, only
+VirtualBox is supported**.

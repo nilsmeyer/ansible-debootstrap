@@ -1,145 +1,50 @@
 ---
 
-- block:
-  # gets rid of LOCALE warnings
-  - name: generate locales
-    command: "chroot {{ _tgt_root }} locale-gen {{ locales|join( ) }}"
+- name: find out uuid for target devices for fstab / crypttab
+  command: "lsblk -nJ -o NAME,UUID,PARTUUID {{ _tgt_devices.keys()|join(' ') }}"
+  register: _lsblk
 
-  - debug:
-      var: _tgt_devices
+- set_fact:
+    _tmp: '{{ _lsblk.stdout|from_json }}'
 
-  - name: find out uuid for target devices for fstab / crypttab
-    command: "lsblk -nJ -o NAME,UUID,PARTUUID {{ _tgt_devices.keys()|join(' ') }}"
-    register: _lsblk
+- name: add uuid to _tgt_devices
+  set_fact:
+    _tgt_devices: >
+      {{ _tgt_devices|combine({'/dev/' + item.name: _tgt_devices['/dev/'+ item.name]|default({})|combine({'uuid': item.uuid })}) }}
+  with_items: "{{ _tmp['blockdevices'] }}"
+  when: item.uuid is defined and _tgt_devices['/dev/' + item.name] is defined
 
-  - set_fact:
-      _tmp: '{{ _lsblk.stdout|from_json }}'
+- name: add uuid to _tgt_devices (device mapper)
+  set_fact:
+    _tgt_devices: >
+      {{ _tgt_devices|combine({'/dev/mapper/' + item.name: _tgt_devices['/dev/mapper/'+ item.name]|default({})|combine({'uuid': item.uuid })}) }}
+  with_items: "{{ _tmp['blockdevices'] }}"
+  when: item.uuid is defined and _tgt_devices['/dev/mapper/' + item.name] is defined
 
-  - name: add uuid to _tgt_devices
-    set_fact:
-      _tgt_devices: >
-        {{ _tgt_devices|combine({'/dev/' + item.name: _tgt_devices['/dev/'+ item.name]|default({})|combine({'uuid': item.uuid })}) }}
-    with_items: "{{ _tmp['blockdevices'] }}"
-    when: item.uuid is defined and _tgt_devices['/dev/' + item.name] is defined
+- name: place templates in /etc
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ _tgt_root }}/etc/{{ item.dest|default(item.src) }}"
+    owner: "{{ item.owner|default('root') }}"
+    group: "{{ item.group|default('root') }}"
+    mode: "{{ item.mode|default('0644') }}"
+  with_items:
+  - { src: 'default/grub' }
+  - { src: 'fstab' }
+  - { src: 'crypttab', dest: 'crypttab' }
 
-  - name: add uuid to _tgt_devices (device mapper)
-    set_fact:
-      _tgt_devices: >
-        {{ _tgt_devices|combine({'/dev/mapper/' + item.name: _tgt_devices['/dev/mapper/'+ item.name]|default({})|combine({'uuid': item.uuid })}) }}
-    with_items: "{{ _tmp['blockdevices'] }}"
-    when: item.uuid is defined and _tgt_devices['/dev/mapper/' + item.name] is defined
+- name: update initramfs
+  command: chroot {{ _tgt_root }} update-initramfs -u -k all
 
-  - name: place templates in /etc
-    template:
-      src: "{{ item.src }}"
-      dest: "{{ _tgt_root }}/etc/{{ item.dest|default(item.src) }}"
-      owner: "{{ item.owner|default('root') }}"
-      group: "{{ item.group|default('root') }}"
-      mode: "{{ item.mode|default('0644') }}"
-    with_items:
-    - { src: 'default/grub' }
-    - { src: 'fstab' }
-    - { src: 'sshd_config', dest: 'ssh/sshd_config'}
-    - { src: 'crypttab', dest: 'crypttab' }
+- name: set up grub
+  command: chroot {{ _tgt_root }} update-grub
 
-  - name: delete supplied keys
-    file:
-      state: absent
-      dest: "{{ _tgt_root }}/etc/ssh/ssh_host_{{ item.algo }}_key"
-    with_items: "{{ ssh_host_keys }}"
+- name: install boot loader (grub)
+  command: chroot {{ _tgt_root }} grub-install {{ item['device'] }}
+  with_items: "{{ layout }}"
+  when: not item['skip_grub']|default(False)
 
-  - name: delete supplied pub keys
-    file:
-      state: absent
-      dest: "{{ _tgt_root }}/etc/ssh/ssh_host_{{ item.algo }}_key.pub"
-    with_items: "{{ ssh_host_keys }}"
-
-  - name: generate (better) ssh host keys
-    command: >
-      chroot {{ _tgt_root }} ssh-keygen -q -N '' -t {{ item.algo }} -b {{ item.keylen }}
-      -f /etc/ssh/ssh_host_{{ item.algo }}_key
-    with_items: "{{ ssh_host_keys }}"
-
-  - name: set root password
-    command: >
+- name: set root password
+  command: >
       chroot {{ _tgt_root }} usermod -p '{{ root_password }}' root
-    when: root_password is defined
-
-  - name: create users
-    command: >
-      chroot {{ _tgt_root }} useradd -m -U {% if 'uid' in item.value %}-u {{ item.value['uid'] }} {% endif %}
-      {% if 'groups' in item.value %} -G {{ item.value.groups|join(',') }}{% endif %}
-      {% if 'password' in item.value %} -p {{ item.value['password'] }}{% endif %}
-       -s {{ item.value['shell']|default('/bin/bash') }} {{ item.key }}
-    with_dict: "{{ users }}"
-
-  - name: add ssh directory
-    file:
-      state: directory
-      dest: "{{ _tgt_root }}/home/{{ item.key }}/.ssh"
-      mode: "0700"
-    when: item.value['authorized_keys'] is defined
-    with_dict: "{{ users }}"
-
-  - name: add ssh keys for users
-    template:
-      src: authorized_keys
-      dest: "{{ _tgt_root }}/home/{{ item.key }}/.ssh/authorized_keys"
-      mode: '0644'
-    with_dict: "{{ users }}"
-    when: item.value['authorized_keys'] is defined
-
-  - name: change ssh key ownership
-    command: "chroot {{ _tgt_root }} chown -R {{ item.key }}:{{ item.key }} /home/{{ item.key }}/.ssh"
-    with_dict: "{{ users }}"
-    when: item.value['authorized_keys'] is defined
-
-  - name: create interfaces.d directory
-    file:
-      state: directory
-      dest: "{{ _tgt_root }}/etc/network/interfaces.d"
-      mode: "0755"
-      owner: root
-      group: root
-
-  - name: set up networking
-    template:
-      src: interface.j2
-      dest: "{{ _tgt_root }}/etc/network/interfaces.d/{{ item['interface'] }}"
-      owner: root
-      group: root
-      mode: '0644'
-    with_items: "{{ network|default([]) }}"
-    when: item['interface'] is defined
-
-  - name: set hostname
-    copy:
-      dest: "{{ _tgt_root }}/etc/hostname"
-      content: "{{ tgt_hostname }}"
-      owner: "root"
-      group: "root"
-      mode: "0644"
-    when: tgt_hostname is defined
-
-  - name: update initramfs
-    command: chroot {{ _tgt_root }} update-initramfs -u -k all
-
-  - name: set up grub
-    command: chroot {{ _tgt_root }} update-grub
-
-  - name: install boot loader (grub)
-    command: chroot {{ _tgt_root }} grub-install {{ item['device'] }}
-    with_items: "{{ layout }}"
-    when: not item['skip_grub']|default(False)
-
-  rescue:
-  - name: Cleanup
-    include_tasks: cleanup.yml
-    when: not skip_umount
-
-  - name: wipe
-    include_tasks: wipe.yml
-    when: not skip_umount
-
-  - fail:
-      msg: "Configuratation failed"
+  when: root_password is defined
