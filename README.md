@@ -24,9 +24,9 @@ is strongly suggested you use ansible-vault here)
 * Debian
   * Stretch
 * Ubuntu
-  * xenial
-  * artful
-  * bionic
+  * bionic (18.04 LTS)
+  * cosmic (18.10)
+  * disco (19.04)
 
 Debian buster (testing) is currently untested. 
 
@@ -52,7 +52,7 @@ pools.
 
 # Configuration
 ## Global variables
-`release`: The release codename (**required**, example: *yakkety*)  
+`release`: The release codename (**required**, example: *cosmic*)  
 `tgt_hostname`: Hostname of the target (**required**)
 `root_password`: Hashed, Salted root password, you can use mkpasswd to create
 one (Example: `$1$sfQaZkVR$Vo/0pjmJaljzakEQFCr7Q/`, obviously **don't use this
@@ -94,8 +94,6 @@ type codes
 zfs)  
 `mount`: Where to mount this device (**optional**, example */boot*)  
 `encrypt`: Set to yes if you want encryption  
-`passphrase`: Passphrase for encryption, use ansible-vault here please.
-(**required** when using encryption)  
 `target`: Target name for device mapper (**required** when using encryption,
 for example *cryptroot*)  
 
@@ -107,6 +105,15 @@ for example *cryptroot*)
 | fd00 | Linux RAID |
 | 8e00 | Linux LVM |
 
+#### Encryption Options
+`passphrase`: Passphrase for encryption, use ansible-vault here please.
+(**required** when using encryption)  
+`cipher`: Encryption cipher (**default** *aes-xts-plain64*)  
+`hash`: Hash type for LUKS (**default** *sha512*)  
+`iter-time`: Time to spend on passphrase processing (**default** *5000*)
+`key-size`: Encryption key size (**default** *256*, values depend on cipher, for AES *128*, *256*, *512*)  
+`luks-type`: LUKS metadata type (**Default** *luks2*)  
+`luks-sector-size`: Sector size for LUKS encryption (**default** *512*, possible values: *512*, *4096*)  
 
 ### Example device with partitions:
 ```

@@ -22,7 +22,7 @@ mirrors:
   bionic: http://archive.ubuntu.com/ubuntu
   cosmic: http://archive.ubuntu.com/ubuntu
 
-supported_releases: ['stretch', 'xenial', 'bionic', 'buster', 'cosmic']
+supported_releases: ['stretch', 'buster', 'bionic', 'cosmic', 'disco']
 
 _target_devices: []
 _devices_used: []
@@ -34,11 +34,11 @@ required_packages:
     - grub-pc
     - openssh-server
     - locales
-  xenial:
-    - linux-image-generic
-  artful:
-    - linux-image-generic
   bionic:
+    - linux-image-generic
+  cosmic:
+    - linux-image-generic
+  disco:
     - linux-image-generic
   strech:
     - linux-image-amd64
