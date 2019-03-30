@@ -11,6 +11,10 @@ dependencies:
     - eatmydata
   encryption:
     - cryptsetup
+  lvm:
+    - lvm2
+  md:
+    - mdadm
   zfs:
     - zfsutils-linux
     - zfs-initramfs
@@ -51,3 +55,7 @@ required_packages:
 
 _apt_env:
   DEBIAN_FRONTEND: noninteractive
+
+dbstrp_mkfs_options:
+  ext4: -b 4096
+  xfs: -m crc=1 -s size=4096 -b size=4096
