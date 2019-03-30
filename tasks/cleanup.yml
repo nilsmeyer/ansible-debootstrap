@@ -1,7 +1,7 @@
 ---
 
 - name: remove bootstrap user
-  command: chroot {{ dbstrp_mountpoint }} userdel debootstrap
+  command: chroot {{ dbstrp_mountpoint }} userdel --remove debootstrap
 
 - name: umount pseudo filesystems
   command: umount {{ _tgt_root }}/{{ item }}
@@ -24,13 +24,22 @@
   with_items: zfs_pool|default([])|reverse
   when: zfs_pool is defined and zfs_fs is defined
 
+- name: deactivate volumes
+  lvol:
+    active: no
+    lv: "{{ volume.lvm.lv }}"
+    vg: "{{ volume.lvm.vg }}"
+  loop_control:
+    loop_var: volume
+  loop: "{{ lvm }}"
+
 - name: Close luks devices
   command: >
     cryptsetup luksClose /dev/mapper/{{ item.value['target'] }}
   with_dict: "{{ _encrypt_targets|default({}) }}"
   when: _luksopen is defined and _luksopen.changed
 
-- name: Remove mountpoint tmpdir
-  file:
-    state: absent
-    dest: "{{ _tgt_root }}"
+- name: stop raid devices
+  command: "mdadm --stop {{ item.key }}"
+  loop: "{{ _tgt_devices|dict2items }}"
+  when: "'/dev/md' in item.key"

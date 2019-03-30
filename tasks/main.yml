@@ -89,8 +89,14 @@
     - name: Partition Devices
       include_tasks: partitions.yml
 
+    - name: Create MD Devices
+      include_tasks: md.yml
+
     - name: encrypt devices
       include_tasks: encryption.yml
+
+    - name: Create logical volumes
+      include_tasks: lvm.yml
 
     - name: Create filesystems
       include_tasks: fs.yml
