@@ -10,9 +10,6 @@ this for all his Debian installation needs.
 * **Encryption**: Encrypt partitions and hard drives with a pre-shared key (it
 is strongly suggested you use ansible-vault here)
 * **ZFS** is supported, even/especially as a root device
-* Pre-select packages to be installed, also supports using PPA on linux
-* Place SSH keys for your users
-* Will create new, stronger SSH Host Keys
 
 ## Limitations
 * You can't have the same names for ZFS pools and crypto devices
@@ -61,7 +58,9 @@ one ;) )**
 (**default**: *yes*)  
 `kernel_cmdline`: Anything you need/want to pass to the kernel (**default**:
 provided by distro)  
-`layout`: Dictionary of partitions / devices (**required**, see below)  
+`layout`: Dictionary of partitions / devices (**required**, see below)
+`md`: List of DM-RAID devices (see below)  
+`lvm`: List of LVM volumes (see below)    
 `install_ppa`: PPAs to install (**Ubuntu Only**, see below)  
 `install_packages`: List of packages to install  
 `zfs_pool`: ZFS pool (see ZFS section)  
@@ -102,7 +101,20 @@ for example *cryptroot*)
 | fd00 | Linux RAID |
 | 8e00 | Linux LVM |
 
-#### Encryption Options
+### DM-RAID devices
+Within the `md` list you can set up DM RAID devices. List items are
+dictionaries supporting the following keys:
+
+`level`: RAID level to be used (one of 0, 1, 4, 5, 6, 10) **required**  
+`chunk_size`: RAID chunk size (required for all RAID levels except 1)  
+`name`: Device name **required**  
+`members`: List of devices to add to RAID  
+
+Encryption and mount options are supported here. Please note that the order is
+1. RAID, 2. Encryption, 3. LVM, so it is currently not possible to create a
+RAID of two LUKS devices or encrypt an LVM volume. 
+
+### Encryption Options
 `passphrase`: Passphrase for encryption, use ansible-vault here please.
 (**required** when using encryption)  
 `cipher`: Encryption cipher (**default** *aes-xts-plain64*)  
@@ -110,9 +122,19 @@ for example *cryptroot*)
 `iter-time`: Time to spend on passphrase processing (**default** *5000*)
 `key-size`: Encryption key size (**default** *256*, values depend on cipher, for AES *128*, *256*, *512*)  
 `luks-type`: LUKS metadata type (**Default** *luks2*)  
-`luks-sector-size`: Sector size for LUKS encryption (**default** *512*, possible values: *512*, *4096*)  
+`luks-sector-size`: Sector size for LUKS encryption (**default** *512*, possible values: *512*, *4096*)   
+`target`: Device name to be used (**required**)  
 
-### Example device with partitions:
+### LVM configuration
+LVM pvs can be created on disks, partitions as well as encrypted devices (use
+/dev/mapper/`target` for LUKS). This is a list of dictionaries, dictionary keys
+from partition dictionary can be used (except encryption) like `mount`, `fs`
+etc. 
+
+`lvm`: Dictionary of lvol options, these are passed to the [lvol noduule](https://docs.ansible.com/ansible/latest/modules/lvol_module.html)
+as such, all options available to that module can be used. 
+
+#### Example device with partitions:
 ```
 layout:
   - device: '/dev/sdb'
@@ -233,7 +255,7 @@ zfs_root: 'rpool/ROOT/ubuntu'
 ```
 
 ## Test playbook for vagrant
-The directory meta/tests contains a test playbook, inventory and Vagrantfile for
+The directory meta/tests contains a test playbook, inventories and Vagrantfile for
 local testing. The vagrant box by default contains three devices, one for the
 source vagrant box and target devices for your install (/dev/sdb, /dev/sdc). To
 test your new installation you would have to switch boot devices in the SeaBIOS
