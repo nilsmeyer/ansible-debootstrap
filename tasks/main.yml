@@ -17,15 +17,28 @@
 
 - name: check if already bootstrapped
   stat:
-    path: "{{ dbstrp_mountpoint }}/.bootstrap_complete"
+    path: "{{ dbstrp_mountpoint }}/root/.bootstrap_complete"
   register: _stat_mount
 
 - set_fact:
     bootstrapped: "{{ _stat_mount.stat.exists }}"
+    bootstrapped_in_chroot: "{{ _stat_mount.stat.exists }}"
+
+- name: check if already bootstrapped
+  stat:
+    path: "/root/.bootstrap_complete"
+  register: _stat_local
+
+- set_fact:
+    bootstrapped: "{{ _stat_local.stat.exists }}"
+    bootstrapped_in_chroot: "{{ _stat_local.stat.exists }}"
 
 - block:
     - name: print keys
       command: ssh-add -L
+      delegate_to: localhost
+      become: no
+      changed_when: no
       register: _local_keys
 
     - fail:
@@ -34,11 +47,11 @@
 
     - name: copy keys
       set_fact:
-        agent_ssh_keys: "{{ _local_keys.stdout_lines }}"
+        dbstrp_ssh_keys: "{{ _local_keys.stdout_lines }}"
 
   delegate_to: localhost
   become: no
-  when: agent_ssh_keys is not defined
+  when: dbstrp_ssh_keys is not defined
 
 - block:
     - name: create list of target devices
@@ -129,7 +142,7 @@
         key: "{{ item }}"
         path: "/tmp/authorized_keys"
         user: debootstrap
-      with_items: "{{ agent_ssh_keys }}"
+      with_items: "{{ dbstrp_ssh_keys }}"
 
     - name: mark as bootstrapped
       copy:
@@ -143,4 +156,4 @@
       set_fact:
         bootstrapped: yes
 
-  when: not bootstrapped or wipe == "ABSOLUTELY"
+  when: not bootstrapped or wipe|default('') == "ABSOLUTELY"
