@@ -33,7 +33,7 @@
 - name: add lv to devices
   set_fact:
     _tgt_devices: >
-      {{ _tgt_devices|combine({"/dev/mapper/" + device.lvm.vg|replace("-", "--") + "-" + device.lvm.lv|replace("-", "--"): device}) }}
+      {{ _tgt_devices|combine({"/dev/mapper/" + device.lvm.vg|replace("-", "--") + "-" + device.lvm.lv|replace("-", "--"): device|combine({'use_dev': True})}) }}
   loop_control:
     index_var: device_num
     loop_var: device
