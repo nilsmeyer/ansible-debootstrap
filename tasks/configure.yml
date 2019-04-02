@@ -37,7 +37,7 @@
 # forces cryptsetup to be included.
 - name: enforce cryptsetup in initramfs
   copy:
-    dest: "/etc/initramfs-tools/conf.d/cryptsetup"
+    dest: "{{ _tgt_root }}/etc/initramfs-tools/conf.d/cryptsetup"
     content: "export CRYPTSETUP=y"
   when: _luksopen.changed
 
