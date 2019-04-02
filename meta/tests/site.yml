@@ -8,9 +8,10 @@
     command: "ssh-add {{ playbook_dir }}/.vagrant/machines/default/virtualbox/private_key"
   - name: print keys
     command: ssh-add -L
+    changed_when: no
     register: _local_keys
   - fail:
-      msg: "No keys in ssh-agent, please add your keys to the agent"
+      msg: "No keys in ssh-agent, please make sure agent is running and add your keys to the agent"
     when: _local_keys.stdout == ""
   - name: copy keys
     set_fact:

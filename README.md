@@ -65,7 +65,10 @@ provided by distro)
 `install_packages`: List of packages to install  
 `zfs_pool`: ZFS pool (see ZFS section)  
 `zfs_fs`: ZFS filesystems (see ZFS section)  
-`zfs_root`: ZFS devices to use as root
+`zfs_root`: ZFS devices to use as root  
+`wipe`: Set to to string "ABSOLUTELY" if you wish to wipe the disk, this will
+remove any disklabels present as well as issue a TRIM/UNMAP for the device.
+Useful when you want to overwrite a target. **Please use extreme caution**  
 
 ## Partition Layout `layout`
 Layout is a list of dictionaries, every dictionary representing a target
@@ -92,6 +95,9 @@ zfs)
 `encrypt`: Set to yes if you want encryption  
 `target`: Target name for device mapper (**required** when using encryption,
 for example *cryptroot*)  
+`label` filesystem label to use  
+`partlabel` partition label to use, defaults to `label` if defined, otherwise
+no label will be set.  
 
 | Type code | Description |
 |---|---|
@@ -184,7 +190,7 @@ This looks a lot like the pool definition above, again a list of dictionaries
 This is used when you want to use ZFS as your root filesystem. Set it to the
 dataset which you want to use as root, example: *rpool/ROOT/Ubuntu*
 
-### ZFS example:
+#### ZFS example:
 This example is plucked from my own configuration, it will create a lot of
 datasets with different options and should give you a good overview over
 the possibilities.

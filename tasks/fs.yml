@@ -2,15 +2,14 @@
 
 - name: Create ext4 filesystems
   command: >
-    mkfs.ext4 {{ item.value['mkfs_options']|default('-b 4096') }} {{ item.key }}
-  with_dict: "{{ _tgt_devices }}"
-  when: >
-    not item.value['encrypt']|default(False) and item.value['fs']|default('undefined') == 'ext4'
-
-- name: Create xfs filesystems
-  command: >
-    mkfs.xfs -f {{ item.value['mkfs_options']|default('-b size=4096 -s size=4096') }}
+    mkfs.{{ item.value.fs }}
+    {{ item.value['mkfs_options']|default(dbstrp_mkfs_defaults[item.value.fs]|default('')) }}
+    {% if 'label' in item.value %}
+    {{ dbstrp_label_option[item.value.fs]|default('-L') }} {{ item.value.label[:dbstrp_label_max[item.value.fs]|default(16)] }}
+    {% endif %}
     {{ item.key }}
   with_dict: "{{ _tgt_devices }}"
   when: >
-    not item.value['encrypt']|default(False) and item.value['fs']|default('undefined') == 'xfs'
+    not item.value['encrypt']|default(False)
+    and 'fs' in item.value
+    and item.value['fs'] in ['ext4', 'xfs', 'vfat', 'f2fs']

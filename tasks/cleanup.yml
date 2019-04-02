@@ -3,6 +3,11 @@
 - name: remove bootstrap user
   command: chroot {{ dbstrp_mountpoint }} userdel --remove debootstrap
 
+- name: remove bootstrap sudoers file
+  file:
+    state: absent
+    path: {{ dbstrp_mountpoint }}/etc/sudoers.d/debootstrap
+
 - name: umount pseudo filesystems
   command: umount {{ _tgt_root }}/{{ item }}
   with_items:

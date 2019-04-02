@@ -29,7 +29,6 @@
     group: "{{ item.group|default('root') }}"
     mode: "{{ item.mode|default('0644') }}"
   with_items:
-  - { src: 'default/grub' }
   - { src: 'fstab' }
   - { src: 'crypttab', dest: 'crypttab' }
 

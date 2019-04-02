@@ -24,7 +24,9 @@
 
 - block:
   - name: run bootstrap
-    command: "eatmydata debootstrap {{ release }} {{ _bootstrap_target }} {{ use_mirror|default(mirrors[release]) }}"
+    command: >
+      eatmydata debootstrap {% if dbstrp_variant is defined %}--variant={{ dbstrp_variant }}{% endif %}
+      {{ release }} {{ _bootstrap_target }} {{ use_mirror|default(mirrors[release]) }}
 
   - name: bind mount pseudo filesystems
     shell: "mkdir {{ _bootstrap_target }}/{{ item }}; mount --bind /{{ item }} {{ _bootstrap_target }}/{{ item }} warn=no"
