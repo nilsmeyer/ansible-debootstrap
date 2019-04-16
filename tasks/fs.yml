@@ -1,6 +1,6 @@
 ---
 
-- name: Create ext4 filesystems
+- name: Create filesystems
   command: >
     mkfs.{{ item.value.fs }}
     {{ item.value['mkfs_options']|default(dbstrp_mkfs_defaults[item.value.fs]|default('')) }}
