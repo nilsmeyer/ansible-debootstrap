@@ -44,7 +44,7 @@
       --iter-time {{ item.value['iter-time']|default('5000') }} luksFormat {{ item.key }}
     with_dict: "{{ _encrypt_targets|default({}) }}"
     when:
-    - _cryptsetup_version.stdout[0]|int < 2
+    - cryptsetup_version[0]|int < 2
 
   - name: fetch luks UUID for device
     command: "cryptsetup luksUUID {{ item.key }}"
