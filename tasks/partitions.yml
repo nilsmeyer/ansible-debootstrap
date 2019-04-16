@@ -1,12 +1,22 @@
 ---
-
 - name: set uuids
   set_fact:
-    _partuuids: "{{ _partuuids|default({})|combine({item.0.device + item.1.num|string: 2147483647|random()|to_uuid()}) }}"
+    _partuuids: >-
+      {%- if "nvme" in item.0.device -%}
+      {%- set __devname=item.0.device + 'p' + item.1.num|string -%}
+      {%- else %}
+      {%- set __devname=item.0.device + item.1.num|string -%}
+      {%- endif %}
+      {%- set element={__devname: 2147483647|random()|to_uuid()} -%}
+      {{ _partuuids|default({})|combine(element) }}
   with_subelements:
     - "{{ layout }}"
     - partitions
     - "{{ {'skip_missing': True} }}"
+
+- name: debug uuids
+  debug:
+    var: _partuuids
 
 # Partitions are stored in ansible facts, however this only seems to work
 # for some devices.
@@ -32,14 +42,19 @@
 - name: Create Partitions
   command: >
     sgdisk
-    {% for partition in item.partitions %}
+    {%- for partition in item.partitions -%}
+    {%- if "nvme" in item.device -%}
+    {%- set __devname=item.device + 'p' + partition.num|string -%}
+    {%- else %}
+    {%- set __devname=item.device + partition.num|string -%}
+    {%- endif %}
     -n {{ partition.num }}:0:{% if partition.size is defined and partition.size[0] != '+'%}+{%endif%}{{ partition.size|default(0) }}
     -t {{ partition.num }}:{{ partition.type|default('8200') }}
-    -u {{ partition.num }}:{{ _partuuids[item.device + partition.num|string] }}
+    -u {{ partition.num }}:{{ _partuuids[__devname] }}
     {% if 'label' in partition or 'partlabel' in partition %}
     -c {{ partition.num }}:{{ partition.partlabel|default(partition.label) }}
-    {% endif %}
-    {% endfor %}  {{ item.device }}
+    {%- endif -%}
+    {% endfor %} {{ item.device }}
   with_items: "{{ layout }}"
 
 - name: find devices for partuuid
@@ -60,14 +75,34 @@
     var: _tgt_devices
     verbosity: 2
 
+- name: debug tgt_devices
+  debug:
+    msg: >-
+      {% if "nvme" in item.0.device %}
+      {% set __devname=item.0.device + 'p' + item.1.num|string %}
+      {% else %}
+      {% set __devname=item.0.device + item.1.num|string %}
+      {% endif %}
+      {{ _tgt_devices[__devname] }}
+  with_subelements:
+    - "{{ layout }}"
+    - partitions
+    - "{{ {'skip_missing': True} }}"
+
 - name: enrich partition data
   set_fact:
-    _tgt_devices: >
+    _tgt_devices: >-
+      {%- if "nvme" in item.0.device -%}
+      {%- set __devname=item.0.device + 'p' + item.1.num|string -%}
+      {%- else -%}
+      {%- set __devname=item.0.device + item.1.num|string -%}
+      {%- endif -%}
       {{
-      _tgt_devices|combine({item.0.device + item.1.num|string:
-      _tgt_devices[item.0.device + item.1.num|string]|combine(item.1)})
+      _tgt_devices|combine({__devname:
+      _tgt_devices[__devname]|combine(item.1)})
       }}
   with_subelements:
     - "{{ layout }}"
     - partitions
     - "{{ {'skip_missing': True} }}"
+
