@@ -1,0 +1,41 @@
+---
+
+- block:
+  - name: Install dependencies on host
+    apt:
+      name: "{{ dependencies.lvm }}"
+      state: present
+      update_cache: no
+
+  - name: Be sure to install lvm2 in target
+    set_fact:
+      install_packages: "{{ install_packages + dependencies.lvm }}"
+
+  when: lvm|count > 0
+
+- name: create volume groups
+  lvg:
+    state: present
+    vg: "{{ volume.lvm.vg }}"
+    pvs: "{{ volume.lvm.pvs }}"
+  loop_control:
+    loop_var: volume
+    index_var: volume_num
+  loop: "{{ lvm }}"
+
+- name: create LVM columes
+  lvol: "{{ volume.lvm }}"
+  loop_control:
+    loop_var: volume
+    index_var: volume_num
+  loop: "{{ lvm }}"
+
+- name: add lv to devices
+  set_fact:
+    _tgt_devices: >
+      {{ _tgt_devices|combine({"/dev/mapper/" + device.lvm.vg|replace("-", "--") + "-" + device.lvm.lv|replace("-", "--"): device|combine({'use_dev': True})}) }}
+  loop_control:
+    index_var: device_num
+    loop_var: device
+  loop: "{{ lvm }}"
+

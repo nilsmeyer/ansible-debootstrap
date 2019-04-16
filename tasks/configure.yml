@@ -29,9 +29,16 @@
     group: "{{ item.group|default('root') }}"
     mode: "{{ item.mode|default('0644') }}"
   with_items:
-  - { src: 'default/grub' }
   - { src: 'fstab' }
   - { src: 'crypttab', dest: 'crypttab' }
+
+# In some configurations initramfstools will not correctly detect encrypted root, this
+# forces cryptsetup to be included.
+- name: enforce cryptsetup in initramfs
+  copy:
+    dest: "{{ _tgt_root }}/etc/initramfs-tools/conf.d/cryptsetup"
+    content: "export CRYPTSETUP=y"
+  when: _luksopen.changed
 
 - name: update initramfs
   command: chroot {{ _tgt_root }} update-initramfs -u -k all

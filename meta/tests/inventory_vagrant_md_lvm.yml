@@ -1,0 +1,71 @@
+---
+
+all:
+  hosts:
+    ansible-debootstrap
+  children:
+    role.nilsmeyer.debootstrap:
+      hosts:
+        ansible-debootstrap:
+          ansible_host: 127.0.0.1
+          ansible_port: 2222
+          ansible_user: vagrant
+          ansible_ssh_private_key_file: "meta/tests/.vagrant/machines/default/virtualbox/private_key"
+          release: bionic
+          layout:
+            - device: '/dev/sdb'
+              partitions:
+                - num: 1
+                  size: 1M
+                  type: ef02
+                - num: 2
+                  size: 1022M
+                  type: fd00
+                - num: 3
+                  type: fd00
+            - device: '/dev/sdc'
+              partitions:
+                - num: 1
+                  size: 1M
+                  type: ef02
+                - num: 2
+                  size: 1022M
+                  type: fd00
+                - num: 3
+                  type: fd00
+
+          md:
+            - name: boot
+              level: 1
+              fs: ext4
+              members:
+                - /dev/sdb2
+                - /dev/sdc2
+              mount: /boot
+              label: boot-vol
+            - name: root
+              level: 1
+              encrypt: yes
+              luks-sector-size: 4096
+              passphrase: "TestPassPhrase"
+              target: cryptroot
+              members:
+                - /dev/sdb3
+                - /dev/sdc3
+
+          lvm:
+            - lvm:
+                lv: root
+                vg: vg0
+                size: 4G
+                pvs: /dev/mapper/cryptroot
+              mount: /
+              fs: xfs
+              mkfs_options: -b size=4096 -s size=4096 -m crc=1,finobt=1,reflink=1,rmapbt=1 -i sparse=1 -l size=128m
+              label: root-vol
+
+          root_password: $6$rkt5rwc5s/ig$YfC62f9cskQm3gT7ojafsK14xe0exg8bDbV5RX/wdi5eqr2Q2pnCTMNNj0m5jd/E8hPBntyqDzh1cCfLZgh6P/  # == vagrant
+
+          tgt_hostname: ansible-debootstrap
+          use_mirror: http://de.archive.ubuntu.com/ubuntu
+          dbstrp_variant: minbase

@@ -11,6 +11,10 @@ dependencies:
     - eatmydata
   encryption:
     - cryptsetup
+  lvm:
+    - lvm2
+  md:
+    - mdadm
   zfs:
     - zfsutils-linux
     - zfs-initramfs
@@ -48,6 +52,18 @@ required_packages:
   buster:
     - linux-image-amd64
 
-
 _apt_env:
   DEBIAN_FRONTEND: noninteractive
+
+dbstrp_mkfs_defaults:
+  ext4: -b 4096
+  xfs: -m crc=1 -s size=4096 -b size=4096
+
+# Name of the label parameter for the mkfs program, defaults to -L
+dbstrp_label_option:
+  vfat: "-n"
+
+dbstrp_label_max:
+  ext4: 16
+  vfat: 11
+  xfs: 12

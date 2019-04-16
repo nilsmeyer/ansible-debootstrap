@@ -1,5 +1,10 @@
 ---
 
+- name: remove bootstrapped file from host
+  file:
+    state: absent
+    path: '/root/.bootstrap_complete'
+
 - name: Wipe disklabel
   command: sgdisk -Z {{ item }}
   with_items: "{{ _target_devices }}"
