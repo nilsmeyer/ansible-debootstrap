@@ -62,7 +62,7 @@
   - name: open luks Devices
     shell: >
       echo '{{ item.value['passphrase'] }}' |
-      cryptsetup -q luksOpen {{ item.key }} {{ item.value['target'] }}
+      cryptsetup -q luksOpen --allow-discards {{ item.key }} {{ item.value['target'] }}
     with_dict: "{{ _encrypt_targets|default({}) }}"
     register: _luksopen
 
