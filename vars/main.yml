@@ -13,6 +13,7 @@ dependencies:
     - cryptsetup
   lvm:
     - lvm2
+    - thin-provisioning-tools
   md:
     - mdadm
   zfs:
