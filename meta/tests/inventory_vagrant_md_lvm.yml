@@ -55,9 +55,15 @@ all:
 
           lvm:
             - lvm:
+                vg: vg0
+                thinpool: thinpool
+                size: 90%FREE
+                pvs: /dev/mapper/cryptroot
+            - lvm:
                 lv: root
                 vg: vg0
                 size: 4G
+                thinpool: thinpool
                 pvs: /dev/mapper/cryptroot
               mount: /
               fs: xfs
