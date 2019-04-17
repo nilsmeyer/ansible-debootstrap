@@ -27,21 +27,31 @@
     when: item.value['encrypt']|default(False)
 
   - name: create encrypted devices (LUKS2)
-    shell: >
-      echo '{{ item.value['passphrase'] }}' | cryptsetup -q --cipher {{ item.value['cipher']|default('aes-xts-plain64') }}
+    command: >
+      cryptsetup -q --cipher {{ item.value['cipher']|default('aes-xts-plain64') }}
       --type {{ item.value['luks-type']|default('luks2') }} --sector-size {{ item.value['luks-sector-size']|default(4096) }}
       --key-size {{ item.value['key-size']|default('256') }}  --hash {{ item.value['hash']|default('sha512') }}
       --iter-time {{ item.value['iter-time']|default('5000') }} luksFormat {{ item.key }}
+    args:
+      stdin: "{{ item.value['passphrase'] }}"
+    no_log: true
+    loop_control:
+      label: "{{ item.key }}"
     with_dict: "{{ _encrypt_targets|default({}) }}"
     when:
     - cryptsetup_version[0]|int >= 2
 
   - name: create encrypted devices (LUKS1)
-    shell: >
-      echo '{{ item.value['passphrase'] }}' | cryptsetup -q --cipher {{ item.value['cipher']|default('aes-xts-plain64') }}
+    command: >
+      cryptsetup -q --cipher {{ item.value['cipher']|default('aes-xts-plain64') }}
       --type {{ item.value['luks-type']|default('luks') }}
       --key-size {{ item.value['key-size']|default('256') }}  --hash {{ item.value['hash']|default('sha512') }}
       --iter-time {{ item.value['iter-time']|default('5000') }} luksFormat {{ item.key }}
+    args:
+      stdin: "{{ item.value['passphrase'] }}"
+    no_log: true
+    loop_control:
+      label: "{{ item.key }}"
     with_dict: "{{ _encrypt_targets|default({}) }}"
     when:
     - cryptsetup_version[0]|int < 2
@@ -60,9 +70,13 @@
     with_items: "{{ _luksuuid.results }}"
 
   - name: open luks Devices
-    shell: >
-      echo '{{ item.value['passphrase'] }}' |
+    command: >
       cryptsetup -q luksOpen --allow-discards {{ item.key }} {{ item.value['target'] }}
+    args:
+      stdin: "{{ item.value['passphrase'] }}"
+    no_log: true
+    loop_control:
+      label: "{{ item.key }}"
     with_dict: "{{ _encrypt_targets|default({}) }}"
     register: _luksopen
 
