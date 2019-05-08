@@ -14,7 +14,6 @@ is strongly suggested you use ansible-vault here)
 ## Limitations
 * You can't have the same names for ZFS pools and crypto devices
 * currently no UEFI support (grub only)
-* no MD RAID / LVM
 * requires a /boot and BIOS boot partition for encrypted / ZFS
 
 ## Supported distributions
