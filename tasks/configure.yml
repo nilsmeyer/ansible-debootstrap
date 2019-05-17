@@ -55,3 +55,9 @@
   command: >
       chroot {{ _tgt_root }} usermod -p '{{ root_password }}' root
   when: root_password is defined
+
+- name: set hostname
+  copy:
+    dest: "{{ _tgt_root }}/etc/hostname"
+    content: "{{ tgt_hostname }}"
+  when: tgt_hostname is defined
