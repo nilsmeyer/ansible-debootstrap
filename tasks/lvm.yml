@@ -24,7 +24,12 @@
   loop: "{{ lvm }}"
 
 - name: create LVM columes
-  lvol: "{{ volume.lvm }}"
+  lvol:
+    vg: "{{ volume.lvm.vg }}"
+    lv: "{{ volume.lvm.lv }}"
+    size: "{{ volume.lvm.size }}"
+    pvs: "{{ volume.lvm.pvs }}"
+    opts: "{{ volume.lvm.opts|default(omit) }}"
   loop_control:
     loop_var: volume
     index_var: volume_num
