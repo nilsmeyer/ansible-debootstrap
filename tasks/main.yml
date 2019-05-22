@@ -1,5 +1,23 @@
 ---
 
+- name: Check EFI system
+  stat:
+    path: /sys/firmware/efi
+  register: _stat_efi
+
+- name: Check EFI mount point
+  when: _stat_efi.stat.exists
+  set_fact:
+    _efi_mountpoint: "{{ layout
+      | selectattr('partitions', 'defined')
+      | sum(attribute='partitions', start=[])
+      | selectattr('mount', 'defined')
+      | selectattr('mount', 'eq', '/boot/efi')
+      | map(attribute='mount')
+      | list
+      | first
+      | default(False) }}"
+
 - name: Cursory variable check
   include_tasks: sanity.yml
 
