@@ -47,6 +47,11 @@
     set_fact:
       _install: "{{ install_packages + required_packages['all'] + required_packages[release] }}"
 
+  - name: replace the package "grub-pc" to "grub-efi" in case of EFI
+    when: _stat_efi.stat.exists
+    set_fact:
+      _install: "{{ _install|map('regex_replace', 'grub-pc', 'grub-efi') | list }}"
+
   - debug:
       msg: "Going to install: {{ _install|join(', ') }}"
       verbosity: 2
