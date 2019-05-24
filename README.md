@@ -13,7 +13,6 @@ is strongly suggested you use ansible-vault here)
 
 ## Limitations
 * You can't have the same names for ZFS pools and crypto devices
-* currently no UEFI support (grub only)
 * no MD RAID / LVM
 * requires a /boot and BIOS boot partition for encrypted / ZFS
 
@@ -49,18 +48,19 @@ pools.
 # Configuration
 ## Global variables
 `release`: The release codename (**required**, example: *cosmic*)  
-`tgt_hostname`: Hostname of the target (**required**)
+`tgt_hostname`: Hostname of the target (**required**)  
 `root_password`: Hashed, Salted root password, you can use mkpasswd to create
 one (Example: `$1$sfQaZkVR$Vo/0pjmJaljzakEQFCr7Q/`, obviously **don't use this
 one ;) )**  
 `use_serial`: Serial device to use for console / grub  
 `use_tmpfs`: Bootstrap to tmpfs, it's quicker and may reduce wear on flash
 (**default**: *yes*)  
+`use_efi`: In case if a system supports UEFI, "grub-efi" will be installed on a target system otherwise "grub-pc" (**default**: *yes*)  
 `kernel_cmdline`: Anything you need/want to pass to the kernel (**default**:
 provided by distro)  
-`layout`: Dictionary of partitions / devices (**required**, see below)
+`layout`: Dictionary of partitions / devices (**required**, see below)  
 `md`: List of DM-RAID devices (see below)  
-`lvm`: List of LVM volumes (see below)    
+`lvm`: List of LVM volumes (see below)  
 `install_ppa`: PPAs to install (**Ubuntu Only**, see below)  
 `install_packages`: List of packages to install  
 `zfs_pool`: ZFS pool (see ZFS section)  
