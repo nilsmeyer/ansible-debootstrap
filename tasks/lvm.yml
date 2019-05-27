@@ -24,7 +24,15 @@
   loop: "{{ lvm }}"
 
 - name: create LVM columes
-  lvol: "{{ volume.lvm }}"
+  lvol:
+    active: "{{ volume.lvm.active|default(omit) }}"
+    force: "{{ volume.lvm.force|default(omit) }}"
+    lv: "{{ volume.lvm.lv|default(omit) }}"
+    opts: "{{ volume.lvm.opts|default(omit) }}"
+    pvs: "{{ volume.lvm.pvs|default(omit) }}"
+    size: "{{ volume.lvm.size|default(omit) }}"
+    thinpool: "{{ volume.lvm.thinpool|default(omit) }}"
+    vg: "{{ volume.lvm.vg|default(omit) }}"
   loop_control:
     loop_var: volume
     index_var: volume_num
