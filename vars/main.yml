@@ -9,6 +9,7 @@ dependencies:
     - e2fsprogs
     - uuid-runtime
     - eatmydata
+    - dosfstools
   encryption:
     - cryptsetup
   lvm:

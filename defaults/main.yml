@@ -6,6 +6,9 @@ install_packages: []
 # use tmpfs for debootstrap?
 use_tmpfs: yes
 
+# use efi?
+use_efi: yes
+
 locales:
 - en_US.UTF-8
 

@@ -1,7 +1,47 @@
 ---
 
+- name: Check EFI system
+  when: use_efi
+  stat:
+    path: /sys/firmware/efi
+  register: _stat_efi
+
+- name: Check EFI mount point
+  when: use_efi and _stat_efi.stat.exists
+  set_fact:
+    _efi_mountpoint: "{{ layout
+      | selectattr('partitions', 'defined')
+      | sum(attribute='partitions', start=[])
+      | selectattr('mount', 'defined')
+      | selectattr('mount', 'eq', '/boot/efi')
+      | map(attribute='mount')
+      | list
+      | first
+      | default(False) }}"
+
 - name: Cursory variable check
   include_tasks: sanity.yml
+
+- name: Check raw partition encryption
+  set_fact:
+    _encrypt: "{{ layout
+      | selectattr('partitions', 'defined')
+      | sum(attribute='partitions', start=[])
+      | selectattr('encrypt', 'defined')
+      | map(attribute='encrypt')
+      | list
+      | first
+      | default(False) }}"
+
+- name: Check raid partition encryption
+  when: md is defined and not _encrypt
+  set_fact:
+    _encrypt: "{{ md
+      | selectattr('encrypt', 'defined')
+      | map(attribute='encrypt')
+      | list
+      | first
+      | default(False) }}"
 
 - name: install ZFS ppa for bionic
   apt_repository:
@@ -104,12 +144,15 @@
 
     - name: Create MD Devices
       include_tasks: md.yml
+      when: md is defined and md|count > 0
 
     - name: encrypt devices
       include_tasks: encryption.yml
+      when: _encrypt
 
     - name: Create logical volumes
       include_tasks: lvm.yml
+      when: lvm is defined and lvm|count > 0
 
     - name: Create filesystems
       include_tasks: fs.yml

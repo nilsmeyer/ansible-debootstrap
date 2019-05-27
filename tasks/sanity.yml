@@ -13,3 +13,7 @@
 - fail:
     msg: root password doesn't look to be hashed, try using mkpasswd or something alike
   when: root_password is defined and root_password[0] != '$'
+
+- fail:
+    msg: EFI requires '/boot/efi' mount point
+  when: _efi_mountpoint is defined and not _efi_mountpoint
