@@ -47,14 +47,15 @@ pools.
 # Configuration
 ## Global variables
 `release`: The release codename (**required**, example: *cosmic*)  
-`tgt_hostname`: Hostname of the target (**required**)  
 `root_password`: Hashed, Salted root password, you can use mkpasswd to create
 one (Example: `$1$sfQaZkVR$Vo/0pjmJaljzakEQFCr7Q/`, obviously **don't use this
 one ;) )**  
 `use_serial`: Serial device to use for console / grub  
 `use_tmpfs`: Bootstrap to tmpfs, it's quicker and may reduce wear on flash
 (**default**: *yes*)  
-`use_efi`: In case if a system supports UEFI, "grub-efi" will be installed on a target system otherwise "grub-pc" (**default**: *yes*)  
+`use_efi`: In case the system supports UEFI, "grub-efi" will be installed on
+te target system, otherwise "grub-pc" (**default**: *yes*). This requires a
+VFAT partition available at /boot/efi.  
 `kernel_cmdline`: Anything you need/want to pass to the kernel (**default**:
 provided by distro)  
 `layout`: Dictionary of partitions / devices (**required**, see below)  
