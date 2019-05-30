@@ -40,6 +40,8 @@ required_packages:
     - openssh-server
     - locales
     - python-minimal # assuming you want to run ansible, too
+    - python3-minimal
+    - sudo
   bionic:
     - linux-image-generic
   cosmic:
