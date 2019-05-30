@@ -22,7 +22,7 @@
 - name: Disable efi if there is no EFI partition
   set_fact:
     use_efi: False
-  when: use_efi and _efi_mountpoint == False
+  when: use_efi and _efi_mountpoint|default(False) == False
 
 - name: Cursory variable check
   include_tasks: sanity.yml
