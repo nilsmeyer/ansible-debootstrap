@@ -32,11 +32,14 @@
 - name: deactivate volumes
   lvol:
     active: no
-    lv: "{{ volume.lvm.lv }}"
+    lv: "{{ volume.lvm.lv|default(volume.lvm.thinpool) }}"
     vg: "{{ volume.lvm.vg }}"
   loop_control:
     loop_var: volume
-  loop: "{{ lvm }}"
+  loop: "{{ lvm|reverse|list }}"
+  when: >
+    volume.lvm is defined and (
+    volume.lvm.lv is defined or volume.lvm.thinpool is defined)
 
 - name: Close luks devices
   command: >
