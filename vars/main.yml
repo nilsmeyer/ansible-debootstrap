@@ -68,3 +68,11 @@ dbstrp_label_max:
   ext4: 16
   vfat: 11
   xfs: 12
+
+_dbstrp_user:
+  name: debootstrap
+  uid: 65533
+  group: ~
+  gid: ~
+  password: '*'
+  non_unique: yes
