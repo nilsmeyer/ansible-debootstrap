@@ -70,6 +70,15 @@ provided by distro)
 remove any disklabels present as well as issue a TRIM/UNMAP for the device.
 Useful when you want to overwrite a target. **Please use extreme caution**  
 
+## Debootstrap user options
+`dbstrp_user`:  
+  `name`: A name of debootstrap user (**default**: *debootstrap*)  
+  `uid`: UID of debootstrap user (**default**: *65533*)  
+  `group`: A group name of debootstrap user (**default**: *name of debootstrap user*)  
+  `gid`: GID of debootstrap user (**default**: *uid of debootstrap user*)  
+  `password`: A hashed password of debootstrap user (**default**: *\**)  
+  `non_unique`: Ability to create non unique user (**default**: *yes*)  
+
 ## Partition Layout `layout`
 Layout is a list of dictionaries, every dictionary representing a target
 device. The dictionary contains the device names, as well as another list of
