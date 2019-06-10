@@ -1,0 +1,63 @@
+---
+- block:
+    - name: setup user properties
+      set_fact:
+        dbstrp_user: "{{ _dbstrp_user|combine(dbstrp_user|default({})) }}"
+
+    - fail:
+        msg: an user who runs 'debootstrap' role and an user created on target system should be different
+      when: (ansible_user == dbstrp_user['name']) or
+        (ansible_ssh_user == dbstrp_user['name'])
+
+    - name: setup group name
+      when: not dbstrp_user['group']
+      set_fact:
+        dbstrp_user: "{{ dbstrp_user|combine({'group': dbstrp_user['name']}) }}"
+
+    - name: setup group id
+      when: not dbstrp_user['gid']
+      set_fact:
+        dbstrp_user: "{{ dbstrp_user|combine({'gid': dbstrp_user['uid']}) }}"
+
+    - name: getent group
+      getent:
+        database: group
+        key: "{{ dbstrp_user['group'] }}"
+        fail_key: no
+
+    - name: create group if absent
+      when: not getent_group[dbstrp_user['group']]
+      command: groupadd -o -g "{{ dbstrp_user['gid'] }}" "{{ dbstrp_user['group'] }}"
+
+    - name: getent passwd
+      getent:
+        database: passwd
+        key: "{{ dbstrp_user['name'] }}"
+        fail_key: no
+
+    - name: setup bootstrap user
+      when: not getent_passwd[dbstrp_user['name']]
+      user:
+        name: "{{ dbstrp_user['name'] }}"
+        create_home: no
+        home: "{{ dbstrp_mountpoint }}"
+        shell: "/bin/bash"
+        groups:
+          - sudo
+        uid: "{{ dbstrp_user['uid'] }}"
+        group: "{{ dbstrp_user['group'] }}"
+        non_unique: "{{ dbstrp_user['non_unique'] }}"
+  when: not _tgt_user
+
+# create user on target
+- block:
+    - name: create bootstrap user group on target
+      command: >
+        chroot {{ dbstrp_mountpoint }} groupadd -o -g {{ dbstrp_user['gid'] }} {{ dbstrp_user['group'] }}
+
+    - name: create bootstrap user on target
+      command: >
+        chroot {{ dbstrp_mountpoint }} useradd -m -u {{ dbstrp_user['uid'] }} -s /bin/bash
+          -g {{ dbstrp_user['group'] }} -p {{ dbstrp_user['password'] }}
+          {{ dbstrp_user['name'] }}
+  when: _tgt_user

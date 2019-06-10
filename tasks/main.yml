@@ -108,22 +108,17 @@
         state: directory
         path: "{{ dbstrp_mountpoint }}"
 
-    - name: setup bootstrap user
-      user:
-        name: debootstrap
-        create_home: no
-        home: "{{ dbstrp_mountpoint }}"
-        shell: "/bin/bash"
-        groups:
-          - sudo
-        uid: 65533
+    - name: create debootstrap user
+      include_tasks: user.yml
+      vars:
+        _tgt_user: no
 
     - name: chroot user via ssh
       blockinfile:
         path: "/etc/ssh/sshd_config"
         state: present
         block: >
-          Match user debootstrap
+          Match user {{ dbstrp_user['name'] }}
               ChrootDirectory {{ dbstrp_mountpoint }}
               AuthorizedKeysFile /tmp/authorized_keys
       register: _ssh_config
@@ -170,30 +165,31 @@
     - name: configure system
       include_tasks: configure.yml
 
-    - name: create bootstrap user on target
-      command: >
-        chroot {{ dbstrp_mountpoint }} useradd -m -U -u 65533 -s /bin/bash {{ dbstrp_username|default('debootstrap') }}
+    - name: create debootstrap user on target
+      include_tasks: user.yml
+      vars:
+        _tgt_user: yes
 
     - name: create ssh directory for bootstrap user
       file:
         state: directory
-        path: "{{ dbstrp_mountpoint }}/home/debootstrap/.ssh"
-        owner: "{{ dbstrp_username|default('debootstrap') }}"
+        path: "{{ dbstrp_mountpoint }}/home/{{ dbstrp_user['name'] }}/.ssh"
+        owner: "{{ dbstrp_user['name'] }}"
 
     - name: setup keys for bootstrap user
       authorized_key:
         key: "{{ item }}"
         path: "/tmp/authorized_keys"
-        user: "{{ dbstrp_username|default('debootstrap') }}"
+        user: "{{ dbstrp_user['name'] }}"
       with_items: "{{ dbstrp_ssh_keys }}"
 
     - name: allow sudo for debootstrap user
       copy:
-        dest: "{{ dbstrp_mountpoint }}/etc/sudoers.d/debootstrap"
+        dest: "{{ dbstrp_mountpoint }}/etc/sudoers.d/{{ dbstrp_user['name'] }}"
         owner: root
         group: root
         mode: 0440
-        content: "{{ dbstrp_username|default('debootstrap') }} ALL=(ALL) NOPASSWD:ALL"
+        content: "{{ dbstrp_user['name'] }} ALL=(ALL) NOPASSWD:ALL"
 
     - name: mark as bootstrapped
       copy:
