@@ -110,6 +110,12 @@
       and zfs_pool is defined
       and dbstrp_zfs_backport|default(False)
 
+  # pool can't be imported when the hostid changes
+  - name: copy hostid to chroot
+    command: >-
+      cp /etc/hostid {{ _bootstrap_target }}/etc/
+    when: zfs_pool is defined
+
   # A bit ineffective, since we'll be upgrading the cache every time.
   - name: enable ppa
     shell: "chroot  {{ _bootstrap_target }} eatmydata add-apt-repository -yu {{ item }}"
