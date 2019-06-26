@@ -23,6 +23,7 @@
   - name: set encryption targets (partition)
     set_fact:
       _encrypt_targets: "{{ _encrypt_targets|default({})|combine({item.key: item.value}) }}"
+    no_log: true
     with_dict: "{{ _tgt_devices }}"
     when: item.value['encrypt']|default(False)
 
@@ -58,6 +59,7 @@
 
   - name: fetch luks UUID for device
     command: "cryptsetup luksUUID {{ item.key }}"
+    no_log: true
     register: _luksuuid
     with_dict: "{{ _encrypt_targets|default({}) }}"
 
@@ -67,6 +69,7 @@
         {{ _tgt_devices|combine({'/dev/mapper/' +  item.item.value['target']:
         item.item.value|combine({'luksuuid': item.stdout, 'encrypt': None,
         'passphrase': None, 'target': None, 'use_dev': True})}) }}
+    no_log: true
     with_items: "{{ _luksuuid.results }}"
 
   - name: open luks Devices
@@ -74,7 +77,6 @@
       cryptsetup -q luksOpen --allow-discards {{ item.key }} {{ item.value['target'] }}
     args:
       stdin: "{{ item.value['passphrase'] }}"
-    no_log: true
     loop_control:
       label: "{{ item.key }}"
     with_dict: "{{ _encrypt_targets|default({}) }}"

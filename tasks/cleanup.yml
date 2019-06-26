@@ -36,6 +36,7 @@
     vg: "{{ volume.lvm.vg }}"
   loop_control:
     loop_var: volume
+    label: "{{ volume.lvm.vg }}/volume.lvm.lv|default(volume.lvm.thinpool) }}"
   loop: "{{ lvm|reverse|list }}"
   when: >
     volume.lvm is defined and (
@@ -44,7 +45,9 @@
 - name: Close luks devices
   command: >
     cryptsetup luksClose /dev/mapper/{{ item.value['target'] }}
-  with_dict: "{{ _encrypt_targets|default({}) }}"
+  loop: "{{ _encrypt_targets|default({})|dict2items }}"
+  loop_control:
+    label: "{{ item.key }}"
   when: _luksopen is defined and _luksopen.changed
 
 - name: stop raid devices
