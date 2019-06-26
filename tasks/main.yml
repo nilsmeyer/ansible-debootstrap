@@ -48,11 +48,6 @@
       | first
       | default(False) }}"
 
-- name: install ZFS ppa for bionic
-  apt_repository:
-    repo: ppa:jonathonf/zfs
-  when: ansible_distribution == "Ubuntu" and ansible_distribution_release == "bionic" and zfs_pool is defined
-
 - name: Install global dependencies
   apt:
     name: "{{ dependencies.global }}"

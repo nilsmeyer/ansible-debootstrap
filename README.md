@@ -63,6 +63,8 @@ provided by distro)
 `lvm`: List of LVM volumes (see below)  
 `install_ppa`: PPAs to install (**Ubuntu Only**, see below)  
 `install_packages`: List of packages to install  
+`dbstrp_zfs_backport` Use the ZFS backport repo from 
+https://launchpad.net/~jonathonf/+archive/ubuntu/zfs  
 `zfs_pool`: ZFS pool (see ZFS section)  
 `zfs_fs`: ZFS filesystems (see ZFS section)  
 `zfs_root`: ZFS devices to use as root  

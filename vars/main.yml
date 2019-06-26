@@ -18,8 +18,11 @@ dependencies:
   md:
     - mdadm
   zfs:
+    - "linux-headers-{{ ansible_kernel }}"
+    - linux-headers-generic
     - zfsutils-linux
     - zfs-initramfs
+    - zfs-dkms  # for ZFS 0.8 using the PPA
 
 mirrors:
   stretch: http://httpredir.debian.org/debian
