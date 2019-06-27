@@ -19,6 +19,11 @@
       | first
       | default(False) }}"
 
+- name: Disable efi if there is no EFI partition
+  set_fact:
+    use_efi: False
+  when: use_efi and _efi_mountpoint|default(False) == False
+
 - name: Cursory variable check
   include_tasks: sanity.yml
 
@@ -42,11 +47,6 @@
       | list
       | first
       | default(False) }}"
-
-- name: install ZFS ppa for bionic
-  apt_repository:
-    repo: ppa:jonathonf/zfs
-  when: ansible_distribution == "Ubuntu" and ansible_distribution_release == "bionic" and zfs_pool is defined
 
 - name: Install global dependencies
   apt:

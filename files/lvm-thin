@@ -1,0 +1,27 @@
+#!/bin/sh
+
+PREREQ="lvm2"
+
+prereqs()
+{
+ echo ""
+}
+
+case $1 in
+prereqs)
+ prereqs
+ exit 0
+ ;;
+esac
+
+. /usr/share/initramfs-tools/hook-functions
+
+copy_exec /usr/sbin/thin_check
+copy_exec /usr/sbin/thin_dump
+copy_exec /usr/sbin/thin_repair
+copy_exec /usr/sbin/thin_restore
+copy_exec /sbin/dmeventd
+copy_exec /lib/x86_64-linux-gnu/device-mapper/libdevmapper-event-lvm2thin.so
+copy_exec /lib/x86_64-linux-gnu/liblvm2cmd.so.2.02
+
+manual_add_modules dm_thin_pool

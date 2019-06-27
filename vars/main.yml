@@ -14,11 +14,15 @@ dependencies:
     - cryptsetup
   lvm:
     - lvm2
+    - thin-provisioning-tools
   md:
     - mdadm
   zfs:
+    - "linux-headers-{{ ansible_kernel }}"
+    - linux-headers-generic
     - zfsutils-linux
     - zfs-initramfs
+    - zfs-dkms  # for ZFS 0.8 using the PPA
 
 mirrors:
   stretch: http://httpredir.debian.org/debian
@@ -39,7 +43,9 @@ required_packages:
     - grub-pc
     - openssh-server
     - locales
-    - python-minimal # assuming you want to run ansible, too
+    - python-minimal  # assuming you want to run ansible, too
+    - python3-minimal
+    - sudo
   bionic:
     - linux-image-generic
   cosmic:
@@ -76,3 +82,4 @@ _dbstrp_user:
   gid: ~
   password: '*'
   non_unique: yes
+

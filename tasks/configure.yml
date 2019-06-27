@@ -32,6 +32,14 @@
   - { src: 'fstab' }
   - { src: 'crypttab', dest: 'crypttab' }
 
+- name: Add thin provisoning hook
+  copy:
+    src: "lvm-thin"
+    dest: "{{ _tgt_root }}/etc/initramfs-tools/hooks/lvm-thin"
+    owner: root
+    group: root
+    mode: 0755
+
 # In some configurations initramfstools will not correctly detect encrypted root, this
 # forces cryptsetup to be included.
 - name: enforce cryptsetup in initramfs

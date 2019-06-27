@@ -23,31 +23,43 @@
   - name: set encryption targets (partition)
     set_fact:
       _encrypt_targets: "{{ _encrypt_targets|default({})|combine({item.key: item.value}) }}"
+    no_log: true
     with_dict: "{{ _tgt_devices }}"
     when: item.value['encrypt']|default(False)
 
   - name: create encrypted devices (LUKS2)
-    shell: >
-      echo '{{ item.value['passphrase'] }}' | cryptsetup -q --cipher {{ item.value['cipher']|default('aes-xts-plain64') }}
+    command: >
+      cryptsetup -q --cipher {{ item.value['cipher']|default('aes-xts-plain64') }}
       --type {{ item.value['luks-type']|default('luks2') }} --sector-size {{ item.value['luks-sector-size']|default(4096) }}
       --key-size {{ item.value['key-size']|default('256') }}  --hash {{ item.value['hash']|default('sha512') }}
       --iter-time {{ item.value['iter-time']|default('5000') }} luksFormat {{ item.key }}
+    args:
+      stdin: "{{ item.value['passphrase'] }}"
+    no_log: true
+    loop_control:
+      label: "{{ item.key }}"
     with_dict: "{{ _encrypt_targets|default({}) }}"
     when:
     - cryptsetup_version[0]|int >= 2
 
   - name: create encrypted devices (LUKS1)
-    shell: >
-      echo '{{ item.value['passphrase'] }}' | cryptsetup -q --cipher {{ item.value['cipher']|default('aes-xts-plain64') }}
+    command: >
+      cryptsetup -q --cipher {{ item.value['cipher']|default('aes-xts-plain64') }}
       --type {{ item.value['luks-type']|default('luks') }}
       --key-size {{ item.value['key-size']|default('256') }}  --hash {{ item.value['hash']|default('sha512') }}
       --iter-time {{ item.value['iter-time']|default('5000') }} luksFormat {{ item.key }}
+    args:
+      stdin: "{{ item.value['passphrase'] }}"
+    no_log: true
+    loop_control:
+      label: "{{ item.key }}"
     with_dict: "{{ _encrypt_targets|default({}) }}"
     when:
-    - _cryptsetup_version.stdout[0]|int < 2
+    - cryptsetup_version[0]|int < 2
 
   - name: fetch luks UUID for device
     command: "cryptsetup luksUUID {{ item.key }}"
+    no_log: true
     register: _luksuuid
     with_dict: "{{ _encrypt_targets|default({}) }}"
 
@@ -57,12 +69,16 @@
         {{ _tgt_devices|combine({'/dev/mapper/' +  item.item.value['target']:
         item.item.value|combine({'luksuuid': item.stdout, 'encrypt': None,
         'passphrase': None, 'target': None, 'use_dev': True})}) }}
+    no_log: true
     with_items: "{{ _luksuuid.results }}"
 
   - name: open luks Devices
-    shell: >
-      echo '{{ item.value['passphrase'] }}' |
-      cryptsetup -q luksOpen {{ item.key }} {{ item.value['target'] }}
+    command: >
+      cryptsetup -q luksOpen --allow-discards {{ item.key }} {{ item.value['target'] }}
+    args:
+      stdin: "{{ item.value['passphrase'] }}"
+    loop_control:
+      label: "{{ item.key }}"
     with_dict: "{{ _encrypt_targets|default({}) }}"
     register: _luksopen
 

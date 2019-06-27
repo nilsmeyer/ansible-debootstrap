@@ -92,7 +92,29 @@
 
   - name: allow ppa use
     command: "chroot {{ _bootstrap_target }} eatmydata apt-get -y install software-properties-common"
-    when: install_ppa|default([])|length > 0
+    when: >-
+      install_ppa|default([])|length > 0 or
+      (
+        ansible_distribution == "Ubuntu"
+        and ansible_distribution_release in ["bionic", "disco"]
+        and zfs_pool is defined
+      and dbstrp_zfs_backport|default(False))
+
+  - name: install ZFS ppa for 0.8
+    command: >-
+      chroot {{ _bootstrap_target }} eatmydata
+      add-apt-repository -yu ppa:jonathonf/zfs
+    when: >-
+      ansible_distribution == "Ubuntu"
+      and ansible_distribution_release in ["bionic", "disco"]
+      and zfs_pool is defined
+      and dbstrp_zfs_backport|default(False)
+
+  # pool can't be imported when the hostid changes
+  - name: copy hostid to chroot
+    command: >-
+      cp /etc/hostid {{ _bootstrap_target }}/etc/
+    when: zfs_pool is defined
 
   # A bit ineffective, since we'll be upgrading the cache every time.
   - name: enable ppa

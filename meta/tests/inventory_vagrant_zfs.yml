@@ -8,7 +8,7 @@ all:
       hosts:
         ansible-debootstrap:
           ansible_host: 127.0.0.1
-          ansible_port: 2200
+          ansible_port: 2222
           ansible_user: vagrant
           ansible_ssh_private_key_file: "meta/tests/.vagrant/machines/default/virtualbox/private_key"
           release: bionic
@@ -24,17 +24,16 @@ all:
                   fs: ext4
                   mount: /boot
                 - num: 3
+                  size: 7160M
                   type: 8200
                   fs: zfs_member
-                  encrypt: yes
-                  luks-sector-size: 4096
-                  passphrase: "TestPassPhrase"
-                  target: cryptroot
+
+          dbstrp_zfs_backport: true
 
           zfs_pool:
             - poolname: rpool
               devices:
-              - /dev/mapper/cryptroot
+              - /dev/sdb3
               options:
               - ashift=12
               fs_options:
@@ -109,5 +108,6 @@ all:
               - sudo
               authorized_keys: {}
 
-          tgt_hostname: ansible-debootstrap
           use_mirror: http://de.archive.ubuntu.com/ubuntu
+          # Building ZFS may require considerably amounts of storage (> 2GiB)
+          use_tmpfs: false

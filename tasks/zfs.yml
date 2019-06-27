@@ -1,10 +1,40 @@
 ---
 
+- name: install ZFS ppa for bionic
+  apt_repository:
+    repo: ppa:jonathonf/zfs
+  register: _dbstrp_zfs_backport_repo
+  when: >-
+    ansible_distribution == "Ubuntu"
+    and ansible_distribution_release in ["bionic", "disco"]
+    and zfs_pool is defined
+    and dbstrp_zfs_backport|default(False)
+
 - name: install dependencies
   apt:
     name: "{{ dependencies.zfs }}"
     state: latest
-    update_cache: no # skip cache check since we already ran apt
+    update_cache: >-
+      {{ _dbstrp_zfs_backport_repo.changed }}
+
+# In some cases the old module is still loaded, this will unload and reload.
+- block:
+    - name: stop zed
+      systemd:
+        name: zfs-zed.service
+        state: stopped
+
+    - name: unload ZFS modules
+      modprobe:
+        name: "zfs"
+        state: "absent"
+
+    - name: load ZFS module
+      modprobe:
+        name: zfs
+        state: present
+
+  when: dbstrp_zfs_backport|default(False)
 
 - name: add dependencies to install list
   set_fact:

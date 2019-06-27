@@ -45,5 +45,5 @@
   loop_control:
     index_var: device_num
     loop_var: device
+  when: "'lv' in device.lvm"
   loop: "{{ lvm }}"
-
