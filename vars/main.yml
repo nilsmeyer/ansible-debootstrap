@@ -83,3 +83,9 @@ _dbstrp_user:
   password: '*'
   non_unique: yes
 
+pseudo_fs:
+  - proc
+  - sys
+  - dev
+  - dev/pts
+  - run/udev
