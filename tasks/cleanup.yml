@@ -10,11 +10,7 @@
 
 - name: umount pseudo filesystems
   command: umount {{ _tgt_root }}/{{ item }}
-  with_items:
-  - dev/pts
-  - proc
-  - sys
-  - dev
+  with_items: "{{ pseudo_fs|reverse }}"
   when: _pseudomount is defined and _pseudomount.changed
 
 - name: umount target

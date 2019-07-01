@@ -31,11 +31,7 @@
   - name: bind mount pseudo filesystems
     shell: "mkdir {{ _bootstrap_target }}/{{ item }}; mount --bind /{{ item }} {{ _bootstrap_target }}/{{ item }} warn=no"
     register: _pseudomount
-    with_items:
-    - proc
-    - sys
-    - dev
-    - dev/pts
+    with_items: "{{ pseudo_fs }}"
 
   - name: Link mtab
     file:
@@ -133,11 +129,7 @@
 - block:
   - name: umount pseudo filesystems
     command: umount {{ _bootstrap_target }}/{{ item }}
-    with_items:
-    - dev/pts
-    - proc
-    - sys
-    - dev
+    with_items: "{{ pseudo_fs|reverse|list }}"
 
   - name: copy data from temp
     shell: cp -a {{ _bootstrap_target }}/* {{ _tgt_root }}/
@@ -145,11 +137,7 @@
   - name: bind mount pseudo filesystems
     shell: mkdir {{ _tgt_root }}/{{ item }}; mount --bind /{{ item }} {{ _tgt_root }}/{{ item }}
     register: _pseudomount
-    with_items:
-    - proc
-    - sys
-    - dev
-    - dev/pts
+    with_items: "{{ pseudo_fs }}"
 
   - name: umount tmpfs
     command: "umount {{ _bootstrap_target }}"
