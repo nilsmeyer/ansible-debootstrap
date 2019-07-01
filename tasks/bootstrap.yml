@@ -127,9 +127,6 @@
   environment: "{{ _apt_env }}"
 
 - block:
-  - debug:
-      msg: "{{ pseudo_fs|reverse|list }}"
-
   - name: umount pseudo filesystems
     command: umount {{ _bootstrap_target }}/{{ item }}
     with_items: "{{ pseudo_fs|reverse|list }}"
