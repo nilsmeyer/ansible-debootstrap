@@ -112,8 +112,8 @@ no label will be set.
 
 | Type code | Description |
 |---|---|
-| 8200 | Linux Filesystem |
-| 8300 | Linux Swap |
+| 8200 | Linux Swap |
+| 8300 | Linux Filesystem |
 | ef02 | BIOS Boot partition (for grub)|
 | fd00 | Linux RAID |
 | 8e00 | Linux LVM |
@@ -161,11 +161,11 @@ layout:
         type: ef02
       - num: 2
         size: 253M
-        type: 8200
+        type: 8300
         fs: ext4
         mount: /boot
       - num: 3 # Notice absence of size here, will use full disk
-        type: 8200
+        type: 8300
         fs: ext4
         mount: /
 ```
