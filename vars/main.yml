@@ -29,9 +29,9 @@ mirrors:
   buster: http://httpredir.debian.org/debian
   xenial: http://archive.ubuntu.com/ubuntu
   bionic: http://archive.ubuntu.com/ubuntu
-  cosmic: http://archive.ubuntu.com/ubuntu
+  eoan: http://archive.ubuntu.com/ubuntu
 
-supported_releases: ['stretch', 'buster', 'bionic', 'cosmic', 'disco']
+supported_releases: ['stretch', 'buster', 'bionic', 'disco', 'eoan']
 
 _target_devices: []
 _devices_used: []
@@ -43,20 +43,24 @@ required_packages:
     - grub-pc
     - openssh-server
     - locales
-    - python-minimal  # assuming you want to run ansible, too
     - python3-minimal
     - sudo
   bionic:
+    - python-minimal
     - linux-image-generic
-  cosmic:
+  eoan:
     - linux-image-generic
   disco:
+    - python-minimal
     - linux-image-generic
   jessie:
+    - python-minimal
     - linux-image-amd64
   stretch:
+    - python-minimal
     - linux-image-amd64
   buster:
+    - python-minimal
     - linux-image-amd64
 
 _apt_env:
