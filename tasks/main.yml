@@ -120,7 +120,7 @@
         block: >
           Match user {{ dbstrp_user['name'] }}
               ChrootDirectory {{ dbstrp_mountpoint }}
-              AuthorizedKeysFile /tmp/authorized_keys
+              AuthorizedKeysFile {{ dbstrp_mountpoint }}/home/debootstrap/.ssh/authorized_keys
       register: _ssh_config
 
     - name: restart sshd
@@ -176,10 +176,17 @@
         path: "{{ dbstrp_mountpoint }}/home/{{ dbstrp_user['name'] }}/.ssh"
         owner: "{{ dbstrp_user['name'] }}"
 
+    - name: create ssh directory for bootstrap user on host
+      file:
+        state: directory
+        path: "/tmp/.debootstrap-ssh"
+        owner: "{{ dbstrp_user['name'] }}"
+        mode: 0700
+
     - name: setup keys for bootstrap user
       authorized_key:
         key: "{{ item }}"
-        path: "/tmp/authorized_keys"
+        path: "{{ dbstrp_mountpoint }}/home/debootstrap/.ssh/authorized_keys"
         user: "{{ dbstrp_user['name'] }}"
       with_items: "{{ dbstrp_ssh_keys }}"
 
