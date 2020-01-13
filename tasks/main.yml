@@ -94,6 +94,18 @@
   when: dbstrp_ssh_keys is not defined
 
 - block:
+    # This may fail when buster-backports isn't enabled as repository, however
+    # this is preferable to debootstrap failing later. This works on the Hetzner
+    # rescue system which is a common use case for this author
+    - name: Install debootstrap from buster-backports when on buster and eoan
+      apt:
+        name: debootstrap
+        state: latest
+        default_release: buster-backports
+        cache_valid_time: "{{ debian_cache_valid_time|default(7200) }}"
+        update_cache: yes
+      when: ansible_distribution_release == 'buster' and release == 'eoan'
+
     - name: create list of target devices
       set_fact:
         _target_devices: "{{ _target_devices + [item.device] }}"
