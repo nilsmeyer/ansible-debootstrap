@@ -21,8 +21,8 @@ is strongly suggested you use ansible-vault here)
   * Buster (untested)
 * Ubuntu
   * bionic (18.04 LTS)
-  * cosmic (18.10)
   * disco (19.04)
+  * eoan (19.10) **requires debootstrap 1.0.115**
 
 Minor modifications will likely make it possible to install newer and perhaps
 older versions as well, or even other Debian based distributions. There are
