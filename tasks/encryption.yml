@@ -1,5 +1,15 @@
 ---
 
+- name: install dependencies
+  apt:
+    name: "{{ dependencies.encryption }}"
+    state: latest
+    update_cache: no # skip cache check since we already ran apt
+
+- name: add dependencies to install list
+  set_fact:
+    install_packages: "{{ install_packages + dependencies['encryption'] }}"
+
 - name: fetch cryptsetup version
   command: "cryptsetup --version"
   changed_when: no
@@ -10,16 +20,6 @@
     cryptsetup_version: "{{ _cryptsetup_version.stdout[11:] }}"
 
 - block:
-  - name: install dependencies
-    apt:
-      name: "{{ dependencies.encryption }}"
-      state: latest
-      update_cache: no # skip cache check since we already ran apt
-
-  - name: add dependencies to install list
-    set_fact:
-      install_packages: "{{ install_packages + dependencies['encryption'] }}"
-
   - name: set encryption targets (partition)
     set_fact:
       _encrypt_targets: "{{ _encrypt_targets|default({})|combine({item.key: item.value}) }}"
