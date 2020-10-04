@@ -198,7 +198,7 @@
     - name: setup keys for bootstrap user
       authorized_key:
         key: "{{ item }}"
-        path: "{{ dbstrp_mountpoint }}/home/debootstrap/.ssh/authorized_keys"
+        path: "{{ dbstrp_mountpoint }}/home/{{ dbstrp_user['name'] }}/.ssh/authorized_keys"
         user: "{{ dbstrp_user['name'] }}"
       with_items: "{{ dbstrp_ssh_keys }}"
 
