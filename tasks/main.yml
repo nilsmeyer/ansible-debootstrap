@@ -1,5 +1,48 @@
 ---
 
+- name: Get disks sizes, logical and physical sectors sizes
+  command: blockdev --"{{ cmd_param }}" "{{ device }}"
+  check_mode: no
+  vars:
+    device: "{{ item.0 }}"
+    cmd_param: "{{ item.1 }}"
+  loop: "{{ (layout | selectattr('device', 'defined') | map(attribute='device') | list) | product(['getss', 'getpbsz', 'getsize64']) | list }}"
+  loop_control:
+    label: "{{ device }} / {{ cmd_param }}"
+  register: _cmd_blockdev_result
+
+- name: Calculate some disks attributes
+  set_fact:
+    device_attrs: "{{
+      device_attrs|default([])
+        | union([{'device': device,
+                  'devsz_b': _devsz_b,
+                  'lbsz_b': _lbsz_b,
+                  'pbsz_b':  _pbsz_b,
+                  'last_usable_sector_s': _last_usable_sector_s,
+                  'offset_s': _offset_s}
+                ])
+    }}"
+  vars:
+    # Get all needed disk's attributes in a one disk
+    _device_attrs: "{{ _cmd_blockdev_result.results | selectattr('item') | selectattr('item.0', 'eq', device) | list }}"
+    _lbsz_b: "{{ _device_attrs  | selectattr('item.1', 'eq', 'getss')     | map(attribute='stdout') | first }}"
+    _pbsz_b: "{{ _device_attrs  | selectattr('item.1', 'eq', 'getpbsz')   | map(attribute='stdout') | first }}"
+    _devsz_b: "{{ _device_attrs | selectattr('item.1', 'eq', 'getsize64') | map(attribute='stdout') | first }}"
+    _efi_label_size_s: 34
+    _last_usable_sector_s: "{{ _devsz_b|int / _lbsz_b|int - _efi_label_size_s }}"
+    _offset_s: "{{ 2048 if _pbsz_b|int == 512 else (4096 if _pbsz_b|int == 4096 else 0) }}"
+  # Loop over disks name
+  loop: "{{ _cmd_blockdev_result.results | selectattr('item') | map(attribute='item.0') | list | unique }}"
+  loop_control:
+    loop_var: device
+
+- name: Combine disks layouts with disks attributes
+  when: item.0.device == item.1.device
+  set_fact:
+    layout_w_attrs: "{{ layout_w_attrs|default([]) | union([item.0 | combine(item.1)]) }}"
+  loop: "{{ layout | zip(device_attrs) | list }}"
+
 - name: Check EFI system
   when: use_efi
   stat:
