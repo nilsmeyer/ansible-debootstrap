@@ -39,6 +39,7 @@
     owner: root
     group: root
     mode: 0755
+  when: lvm is defined
 
 # In some configurations initramfstools will not correctly detect encrypted root, this
 # forces cryptsetup to be included.
