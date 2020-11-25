@@ -43,10 +43,11 @@
   command: >
     sgdisk
     {%- for partition in item.partitions -%}
-    {%- if "nvme" in item.device -%}
-    {%- set __devname=item.device + 'p' + partition.num|string -%}
-    {%- else %}
-    {%- set __devname=item.device + partition.num|string -%}
+    {%- set __devname=item.device + ('p' if 'nvme' in item.device else '') + partition.num|string -%}
+    {%- if 'size' not in partition -%}
+      {#- The size in sectors -#}
+      {%- set size = (item.last_usable_sector_s|int - item.offset_s|int - (item.partitions|selectattr('size','defined')|map(attribute='size')|map('f_2sectors')|list|sum)) * item.lbsz_b|int // 4096 * 4096 / item.lbsz_b|int -%}
+      {%- set partition = partition|combine({'size': size|string})-%}
     {%- endif %}
     -n {{ partition.num }}:0:{% if partition.size is defined and partition.size[0] != '+'%}+{%endif%}{{ partition.size|default(0) }}
     -t {{ partition.num }}:{{ partition.type|default('8200') }}
@@ -55,7 +56,7 @@
     -c {{ partition.num }}:{{ partition.partlabel|default(partition.label) }}
     {%- endif -%}
     {% endfor %} {{ item.device }}
-  with_items: "{{ layout }}"
+  with_items: "{{ layout_w_attrs }}"
 
 - name: find devices for partuuid
   command: "blkid -l -o device -t PARTUUID='{{ item.value }}'"
@@ -68,7 +69,7 @@
   with_items: "{{ _blkid.results }}"
 
 - debug:
-    var: layout
+    var: layout_w_attrs
     verbosity: 2
 
 - debug:
