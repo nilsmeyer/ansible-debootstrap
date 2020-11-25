@@ -30,8 +30,10 @@ mirrors:
   xenial: http://archive.ubuntu.com/ubuntu
   bionic: http://archive.ubuntu.com/ubuntu
   eoan: http://archive.ubuntu.com/ubuntu
+  focal: http://archive.ubuntu.com/ubuntu
+  groovy: http://archive.ubuntu.com/ubuntu
 
-supported_releases: ['stretch', 'buster', 'bionic', 'disco', 'eoan']
+supported_releases: ['stretch', 'buster', 'bionic', 'eoan', 'focal', 'groovy']
 
 _target_devices: []
 _devices_used: []
@@ -50,8 +52,9 @@ required_packages:
     - linux-image-generic
   eoan:
     - linux-image-generic
-  disco:
-    - python-minimal
+  focal:
+    - linux-image-generic
+  groovy:
     - linux-image-generic
   jessie:
     - python-minimal
