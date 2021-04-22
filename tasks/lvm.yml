@@ -16,12 +16,20 @@
 - name: create volume groups
   lvg:
     state: present
-    vg: "{{ volume.lvm.vg }}"
-    pvs: "{{ volume.lvm.pvs }}"
+    vg: "{{ vg }}"
+    pvs: "{{ pvs }}"
+  vars:
+    pvs: "{{ lvm
+            | selectattr('lvm', 'defined')
+            | map(attribute='lvm')
+            | selectattr('vg', 'eq', vg)
+            | selectattr('pvs', 'defined')
+            | map(attribute='pvs')
+            | list
+          }}"
   loop_control:
-    loop_var: volume
-    index_var: volume_num
-  loop: "{{ lvm }}"
+    loop_var: vg
+  loop: "{{ lvm | selectattr('lvm', 'defined') | map(attribute='lvm') | selectattr('vg', 'defined') | map(attribute='vg') | list | unique }}"
 
 - name: create LVM columes
   lvol:
