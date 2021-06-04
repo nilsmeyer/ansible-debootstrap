@@ -26,6 +26,7 @@
             | selectattr('pvs', 'defined')
             | map(attribute='pvs')
             | list
+            | unique
           }}"
   loop_control:
     loop_var: vg
