@@ -91,6 +91,11 @@
       | first
       | default(False) }}"
 
+- name: Install newest debootstrap from impish
+  apt:
+    deb: http://de.archive.ubuntu.com/ubuntu/pool/main/d/debootstrap/debootstrap_1.0.124_all.deb
+  when: ansible_distribution_release != "impish" and release == "impish"
+
 - name: Install global dependencies
   apt:
     name: "{{ dependencies.global }}"
