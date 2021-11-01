@@ -10,6 +10,7 @@ dependencies:
     - uuid-runtime
     - eatmydata
     - dosfstools
+    - zstd
   encryption:
     - cryptsetup
   lvm:
@@ -33,7 +34,7 @@ mirrors:
   focal: http://archive.ubuntu.com/ubuntu
   groovy: http://archive.ubuntu.com/ubuntu
 
-supported_releases: ['stretch', 'buster', 'bionic', 'eoan', 'focal', 'groovy']
+supported_releases: ['stretch', 'buster', 'bullseye', 'bionic', 'eoan', 'focal', 'groovy', 'hirsute', 'impish']
 
 _target_devices: []
 _devices_used: []
@@ -56,6 +57,10 @@ required_packages:
     - linux-image-generic
   groovy:
     - linux-image-generic
+  hirsute:
+    - linux-image-generic
+  impish:
+    - linux-image-generic
   jessie:
     - python-minimal
     - linux-image-amd64
@@ -63,6 +68,9 @@ required_packages:
     - python-minimal
     - linux-image-amd64
   buster:
+    - python-minimal
+    - linux-image-amd64
+  bullseye:
     - python-minimal
     - linux-image-amd64
 

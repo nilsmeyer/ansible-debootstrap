@@ -19,10 +19,13 @@ is strongly suggested you use ansible-vault here)
 * Debian
   * Stretch
   * Buster (untested)
+  * Bullseye (untested)
 * Ubuntu
   * bionic (18.04 LTS)
   * disco (19.04)
-  * eoan (19.10) **requires debootstrap 1.0.115**
+  * focal (20.04)
+  * hirsute (21.04)
+  * impish (21.10) (will install newer debootstrap)
 
 Minor modifications will likely make it possible to install newer and perhaps
 older versions as well, or even other Debian based distributions. There are
@@ -123,6 +126,8 @@ Within the `md` list you can set up DM RAID devices. List items are
 dictionaries supporting the following keys:
 
 `level`: RAID level to be used (one of 0, 1, 4, 5, 6, 10) **required**  
+`bitmap`: Device to use for bitmap, default "internal", use "none" to disable
+bitmap  
 `chunk_size`: RAID chunk size (required for all RAID levels except 1)  
 `name`: Device name **required**  
 `members`: List of devices to add to RAID  

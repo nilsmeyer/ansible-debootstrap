@@ -18,7 +18,8 @@
 - name: create MD devices
   command: >
     mdadm --create /dev/md{{ 127 - device_num }} --level {{ device.level }} --raid-devices {{ device.members|count }}
-    {% if device.level != 0 %}--bitmap=internal{% endif %} --name {{ device.name }} --metadata 1.2
+    {% if device.level != 0 %}--bitmap={{ device.bitmap|default("internal") }} {% endif %}
+    --name {{ device.name }} --metadata 1.2
     {% if 'chunk_size' in device %}--chunk {{ device.chunk_size }}{% endif %} {{ device.members|join(" ") }}
   loop_control:
     index_var: device_num
