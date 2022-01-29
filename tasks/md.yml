@@ -18,9 +18,28 @@
 - name: create MD devices
   command: >
     mdadm --create /dev/md{{ 127 - device_num }} --level {{ device.level }} --raid-devices {{ device.members|count }}
+    --symlinks yes --homehost={{ inventory_hostname_short | default('any') }}
     {% if device.level != 0 %}--bitmap={{ device.bitmap|default("internal") }} {% endif %}
     --name {{ device.name }} --metadata 1.2
     {% if 'chunk_size' in device %}--chunk {{ device.chunk_size }}{% endif %} {{ device.members|join(" ") }}
+  loop_control:
+    index_var: device_num
+    loop_var: device
+  loop: "{{ md }}"
+
+- name: create "/dev/md" directory
+  file:
+    path: /dev/md
+    state: directory
+    mode: 0755
+    owner: root
+    group: root
+
+- name: debug md
+  file:
+    src: "../md{{ 127 - device_num }}"
+    dest: "/dev/md/{{ device.name }}"
+    state: link
   loop_control:
     index_var: device_num
     loop_var: device
