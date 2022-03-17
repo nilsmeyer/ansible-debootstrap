@@ -71,7 +71,6 @@ required_packages:
     - python-minimal
     - linux-image-amd64
   bullseye:
-    - python-minimal
     - linux-image-amd64
 
 _apt_env:
