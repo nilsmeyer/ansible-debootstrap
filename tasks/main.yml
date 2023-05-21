@@ -1,5 +1,20 @@
 ---
 
+- name: Expand "layout" variable
+  set_fact:
+    layout_n: "{{ layout_n|default([]) + _layout_n|list }}"
+  loop: "{{ layout | selectattr('device', 'defined') | list }}"
+  vars:
+    _layout_n: |-
+      {%- for _item in ([item.device] if item.device is string else item.device) -%}
+        {{ item | combine({'device': _item}) }},
+      {%- endfor -%}
+
+- name: Update "layout" variable
+  when: layout_n | selectattr('device', 'defined') | list | length > 0
+  set_fact:
+    layout: "{{ layout_n }}"
+
 - name: Get disks sizes, logical and physical sectors sizes
   command: "lsblk -d -b -O --json {{ layout | selectattr('device', 'defined') | map(attribute='device') | list | join(' ') }}"
   check_mode: no
