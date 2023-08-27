@@ -26,6 +26,7 @@ dependencies:
     - zfs-dkms  # for ZFS 0.8 using the PPA
 
 mirrors:
+  bookworm: http://httpredir.debian.org/debian
   stretch: http://httpredir.debian.org/debian
   buster: http://httpredir.debian.org/debian
   xenial: http://archive.ubuntu.com/ubuntu
@@ -34,7 +35,7 @@ mirrors:
   focal: http://archive.ubuntu.com/ubuntu
   groovy: http://archive.ubuntu.com/ubuntu
 
-supported_releases: ['stretch', 'buster', 'bullseye', 'bionic', 'eoan', 'focal', 'groovy', 'hirsute', 'impish']
+supported_releases: ['bookworm', 'stretch', 'buster', 'bullseye', 'bionic', 'eoan', 'focal', 'groovy', 'hirsute', 'impish']
 
 _target_devices: []
 _devices_used: []
@@ -71,6 +72,8 @@ required_packages:
     - python-minimal
     - linux-image-amd64
   bullseye:
+    - linux-image-amd64
+  bookworm:
     - linux-image-amd64
 
 _apt_env:

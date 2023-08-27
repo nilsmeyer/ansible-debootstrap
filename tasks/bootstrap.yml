@@ -77,7 +77,7 @@
       mode: "0644"
       owner: root
       group: root
-    when: release in ["stretch", "buster", "sid"]
+    when: release in ["stretch", "buster", "sid", "bookworm"]
 
   - name: update sources
     command: "chroot {{ _bootstrap_target }} apt-get update"
