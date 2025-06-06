@@ -49,6 +49,12 @@
     content: "export CRYPTSETUP=y"
   when: _luksopen is defined and _luksopen.changed
 
+- name: enforce cryptsetup in grub
+  copy:
+    dest: "{{ _tgt_root }}/etc/default/grub.d/cryptodisk.cfg"
+    content: "GRUB_ENABLE_CRYPTODISK=y"
+  when: _luksopen is defined and _luksopen.changed
+
 - name: update initramfs
   command: chroot {{ _tgt_root }} update-initramfs -u -k all
 
