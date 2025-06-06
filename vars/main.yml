@@ -28,13 +28,16 @@ dependencies:
 mirrors:
   stretch: http://httpredir.debian.org/debian
   buster: http://httpredir.debian.org/debian
+  bullseye: http://httpredir.debian.org/debian
+  bookworm: http://httpredir.debian.org/debian
   xenial: http://archive.ubuntu.com/ubuntu
   bionic: http://archive.ubuntu.com/ubuntu
   eoan: http://archive.ubuntu.com/ubuntu
   focal: http://archive.ubuntu.com/ubuntu
   groovy: http://archive.ubuntu.com/ubuntu
+  jammy: http://archive.ubuntu.com/ubuntu
 
-supported_releases: ['stretch', 'buster', 'bullseye', 'bionic', 'eoan', 'focal', 'groovy', 'hirsute', 'impish']
+supported_releases: ['stretch', 'buster', 'bullseye', 'bookworm', 'bionic', 'eoan', 'focal', 'groovy', 'hirsute', 'impish', 'jammy']
 
 _target_devices: []
 _devices_used: []
@@ -61,6 +64,8 @@ required_packages:
     - linux-image-generic
   impish:
     - linux-image-generic
+  jammy:
+    - linux-image-generic
   jessie:
     - python-minimal
     - linux-image-amd64
@@ -71,6 +76,9 @@ required_packages:
     - python-minimal
     - linux-image-amd64
   bullseye:
+    # - python-minimal
+    - linux-image-amd64
+  bookworm:
     - linux-image-amd64
 
 _apt_env:
