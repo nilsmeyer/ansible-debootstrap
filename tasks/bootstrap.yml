@@ -118,6 +118,13 @@
     with_items: "{{ install_ppa|default([]) }}"
     when: install_ppa is defined and install_ppa|length > 0
 
+  # hetzner only seems to require /tmp/hwc, but can't create it itself, for the following pkgs install
+  # otherwise all sorts of apt installs fail, eg mktemp: failed to create file via template ‘/tmp/hwc/tmp.XXXXXXXXXX’: No such file or directory
+  - name: create {{ _bootstrap_target }}/tmp/hwc
+    file:
+      path: "{{ _bootstrap_target }}/tmp/hwc"
+      state: directory
+
   - name: install packages
     command: "chroot {{ _bootstrap_target }} eatmydata apt-get -y install {{ _install|join(' ') }}"
 
