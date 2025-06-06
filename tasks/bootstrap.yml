@@ -79,6 +79,13 @@
       group: root
     when: release in ["stretch", "buster", "sid"]
 
+  - name: add {{ release }}-backports.list
+    copy:
+      dest: "{{ _bootstrap_target }}/etc/apt/sources.list.d/{{ release }}-backports.list"
+      content: |
+        deb {{ use_mirror }} {{ release }}-backports main
+    when: release in ["stretch", "buster", "sid", "bullseye", "bookworm"]
+
   - name: update sources
     command: "chroot {{ _bootstrap_target }} apt-get update"
 
