@@ -60,6 +60,19 @@
     include_tasks: wipe.yml
 
 - block:
+
+  - name: add apt auth.conf if exist
+    lineinfile:
+      dest: "{{ _bootstrap_target }}/etc/apt/auth.conf"
+      line: "{{ auth_conf }}"
+      create: true
+      mode: '0600'
+    loop_control:
+      loop_var: auth_conf
+    loop: "{{ apt_auth_conf }}"
+    no_log: true # don't leak secrets to logs
+    when: apt_auth_conf is defined and apt_auth_conf|count > 0
+
   # add more sources for apt
   - name: update sources.list
     template:
