@@ -24,6 +24,7 @@
   command: "lsblk -b -nJ -O {{ _target_devices|join(' ') }}"
   changed_when: False
   register: _lsblk
+  timeout: 30 # sometimes hangs on already-partitioned devices
 
 - name: set helper for blockdevices
   set_fact:
