@@ -60,6 +60,21 @@
     include_tasks: wipe.yml
 
 - block:
+
+  - name: install prerequisites for apt-key
+    command: "chroot {{ _bootstrap_target }} apt-get install -y curl gnupg"
+
+  - name: install apt keys if exist
+    command: "chroot {{ _bootstrap_target }} apt-key adv --fetch-keys {{ key }}"
+    loop: "{{ apt_keys }}"
+    loop_control:
+      loop_var: key
+    when: apt_keys is defined and apt_keys|count > 0
+    register: result
+    retries: 3
+    until: result is not failed
+    delay: 5
+
   # add more sources for apt
   - name: update sources.list
     template:
