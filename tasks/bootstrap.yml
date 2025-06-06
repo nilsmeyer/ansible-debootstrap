@@ -79,6 +79,20 @@
       group: root
     when: release in ["stretch", "buster", "sid"]
 
+  - name: add sources.list.d
+    file:
+      name: "{{ _bootstrap_target }}/etc/apt/sources.list.d/"
+      state: directory
+  - name: add extra_repos
+    copy:
+      dest: "{{ _bootstrap_target }}/etc/apt/sources.list.d/{{ extra_repo.name }}.list"
+      mode: '644'
+      content: "{{ extra_repo.content }}"
+    loop_control:
+      loop_var: extra_repo
+    loop: "{{ extra_repos }}"
+    when: extra_repos is defined and extra_repos|count > 0
+
   - name: update sources
     command: "chroot {{ _bootstrap_target }} apt-get update"
 
