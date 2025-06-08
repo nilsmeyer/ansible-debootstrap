@@ -29,7 +29,7 @@
       {{ release }} {{ _bootstrap_target }} {{ use_mirror|default(mirrors[release]) }}
 
   - name: bind mount pseudo filesystems
-    shell: "mkdir {{ _bootstrap_target }}/{{ item }}; mount --bind /{{ item }} {{ _bootstrap_target }}/{{ item }} warn=no"
+    shell: "mkdir {{ _bootstrap_target }}/{{ item }}; mount --bind /{{ item }} {{ _bootstrap_target }}/{{ item }}"
     register: _pseudomount
     with_items: "{{ pseudo_fs }}"
 
