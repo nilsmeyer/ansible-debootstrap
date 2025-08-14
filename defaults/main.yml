@@ -16,3 +16,5 @@ locales:
 text_console: no
 
 dbstrp_mountpoint: /mnt/bootstrap
+
+tmpfs_size: 6G

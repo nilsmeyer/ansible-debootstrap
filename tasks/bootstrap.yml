@@ -13,7 +13,7 @@
       _mktemp: None
 
   - name: mount tmpfs
-    command: "mount -t tmpfs -o size=2G none {{ _bootstrap_target }}"
+    command: "mount -t tmpfs -o size={{ tmpfs_size }} none {{ _bootstrap_target }}"
 
   when: use_tmpfs
 
