@@ -42,8 +42,6 @@ _devices_used: []
 _mountlist: []
 _encrypt_targets: {}
 
-tmpfs_size: 2G
-
 required_packages:
   all:
     - grub-pc
