@@ -33,6 +33,10 @@
     register: _pseudomount
     with_items: "{{ pseudo_fs }}"
 
+  - name: mount efivars
+    shell: "chroot {{ _bootstrap_target }} mount -t efivarfs none /sys/firmware/efi/efivars"
+    when: use_efi and _stat_efi.stat.exists
+
   - name: Link mtab
     file:
       src: "/proc/mounts"
@@ -77,7 +81,7 @@
       mode: "0644"
       owner: root
       group: root
-    when: release in ["stretch", "buster", "sid"]
+    when: release in ["stretch", "buster", "sid", "bookworm"]
 
   - name: update sources
     command: "chroot {{ _bootstrap_target }} apt-get update"
@@ -127,6 +131,10 @@
   environment: "{{ _apt_env }}"
 
 - block:
+  - name: umount efivars
+    command: "chroot {{ _bootstrap_target }} umount /sys/firmware/efi/efivars"
+    when: use_efi and _stat_efi.stat.exists
+
   - name: umount pseudo filesystems
     command: umount {{ _bootstrap_target }}/{{ item }}
     with_items: "{{ pseudo_fs|reverse|list }}"

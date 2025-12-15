@@ -20,6 +20,7 @@ is strongly suggested you use ansible-vault here)
   * Stretch
   * Buster (untested)
   * Bullseye (untested)
+  * Bookworm (untested)
 * Ubuntu
   * bionic (18.04 LTS)
   * disco (19.04)
