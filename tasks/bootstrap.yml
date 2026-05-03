@@ -13,7 +13,7 @@
       _mktemp: None
 
   - name: mount tmpfs
-    command: "mount -t tmpfs -o size=2G none {{ _bootstrap_target }} warn=no"
+    command: "mount -t tmpfs -o size={{ tmpfs_size }} none {{ _bootstrap_target }}"
 
   when: use_tmpfs
 
@@ -29,9 +29,13 @@
       {{ release }} {{ _bootstrap_target }} {{ use_mirror|default(mirrors[release]) }}
 
   - name: bind mount pseudo filesystems
-    shell: "mkdir {{ _bootstrap_target }}/{{ item }}; mount --bind /{{ item }} {{ _bootstrap_target }}/{{ item }} warn=no"
+    shell: "mkdir {{ _bootstrap_target }}/{{ item }}; mount --bind /{{ item }} {{ _bootstrap_target }}/{{ item }}"
     register: _pseudomount
     with_items: "{{ pseudo_fs }}"
+
+  - name: mount efivars
+    shell: "chroot {{ _bootstrap_target }} mount -t efivarfs none /sys/firmware/efi/efivars"
+    when: use_efi and _stat_efi.stat.exists
 
   - name: Link mtab
     file:
@@ -60,6 +64,32 @@
     include_tasks: wipe.yml
 
 - block:
+
+  - name: add apt auth.conf if exist
+    lineinfile:
+      dest: "{{ _bootstrap_target }}/etc/apt/auth.conf"
+      line: "{{ auth_conf }}"
+      create: true
+      mode: '0600'
+    loop_control:
+      loop_var: auth_conf
+    loop: "{{ apt_auth_conf }}"
+    no_log: true # don't leak secrets to logs
+    when: apt_auth_conf is defined and apt_auth_conf|count > 0
+  - name: install prerequisites for apt-key
+    command: "chroot {{ _bootstrap_target }} apt-get install -y curl gnupg"
+
+  - name: install apt keys if exist
+    command: "chroot {{ _bootstrap_target }} apt-key adv --fetch-keys {{ key }}"
+    loop: "{{ apt_keys }}"
+    loop_control:
+      loop_var: key
+    when: apt_keys is defined and apt_keys|count > 0
+    register: result
+    retries: 3
+    until: result is not failed
+    delay: 5
+
   # add more sources for apt
   - name: update sources.list
     template:
@@ -77,7 +107,28 @@
       mode: "0644"
       owner: root
       group: root
-    when: release in ["stretch", "buster", "sid"]
+    when: release in ["stretch", "buster", "sid", "bookworm"]
+
+  - name: add sources.list.d
+    file:
+      name: "{{ _bootstrap_target }}/etc/apt/sources.list.d/"
+      state: directory
+  - name: add extra_repos
+    copy:
+      dest: "{{ _bootstrap_target }}/etc/apt/sources.list.d/{{ extra_repo.name }}.list"
+      mode: '644'
+      content: "{{ extra_repo.content }}"
+    loop_control:
+      loop_var: extra_repo
+    loop: "{{ extra_repos }}"
+    when: extra_repos is defined and extra_repos|count > 0
+
+  - name: add {{ release }}-backports.list
+    copy:
+      dest: "{{ _bootstrap_target }}/etc/apt/sources.list.d/{{ release }}-backports.list"
+      content: |
+        deb {{ use_mirror }} {{ release }}-backports main
+    when: release in ["stretch", "buster", "sid", "bullseye", "bookworm"]
 
   - name: update sources
     command: "chroot {{ _bootstrap_target }} apt-get update"
@@ -127,6 +178,10 @@
   environment: "{{ _apt_env }}"
 
 - block:
+  - name: umount efivars
+    command: "chroot {{ _bootstrap_target }} umount /sys/firmware/efi/efivars"
+    when: use_efi and _stat_efi.stat.exists
+
   - name: umount pseudo filesystems
     command: umount {{ _bootstrap_target }}/{{ item }}
     with_items: "{{ pseudo_fs|reverse|list }}"
