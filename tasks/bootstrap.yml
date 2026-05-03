@@ -123,6 +123,13 @@
     loop: "{{ extra_repos }}"
     when: extra_repos is defined and extra_repos|count > 0
 
+  - name: add {{ release }}-backports.list
+    copy:
+      dest: "{{ _bootstrap_target }}/etc/apt/sources.list.d/{{ release }}-backports.list"
+      content: |
+        deb {{ use_mirror }} {{ release }}-backports main
+    when: release in ["stretch", "buster", "sid", "bullseye", "bookworm"]
+
   - name: update sources
     command: "chroot {{ _bootstrap_target }} apt-get update"
 
