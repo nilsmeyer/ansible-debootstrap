@@ -8,6 +8,10 @@
     state: absent
     path: "{{ dbstrp_mountpoint }}/etc/sudoers.d/debootstrap"
 
+- name: umount efivars
+  shell: "chroot {{ _tgt_root }} umount /sys/firmware/efi/efivars"
+  when: use_efi
+
 - name: umount pseudo filesystems
   command: umount {{ _tgt_root }}/{{ item }}
   with_items: "{{ pseudo_fs|reverse }}"
