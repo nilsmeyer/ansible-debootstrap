@@ -46,44 +46,44 @@ be cleaned up afterwards.
 Normally it is assumed that a some sort of PXE or USB rescue system is used,
 some caveats apply otherwise with regards to device names. As an example, you
 can't use the same name for any device mapper devices (luks encryption) or ZFS
-pools. 
+pools.
 
 # Configuration
 ## Global variables
-`release`: The release codename (**required**, example: *cosmic*)  
+`release`: The release codename (**required**, example: *cosmic*)
 `root_password`: Hashed, Salted root password, you can use mkpasswd to create
 one (Example: `$1$sfQaZkVR$Vo/0pjmJaljzakEQFCr7Q/`, obviously **don't use this
-one ;) )**  
-`use_serial`: Serial device to use for console / grub  
+one ;) )**
+`use_serial`: Serial device to use for console / grub
 `use_tmpfs`: Bootstrap to tmpfs, it's quicker and may reduce wear on flash
-(**default**: *yes*)  
+(**default**: *yes*)
 `use_efi`: In case the system supports UEFI, "grub-efi" will be installed on
 te target system, otherwise "grub-pc" (**default**: *yes*). This requires a
-VFAT partition available at /boot/efi.  
+VFAT partition available at /boot/efi.
 `kernel_cmdline`: Anything you need/want to pass to the kernel (**default**:
-provided by distro)  
-`layout`: Dictionary of partitions / devices (**required**, see below)  
-`md`: List of DM-RAID devices (see below)  
-`lvm`: List of LVM volumes (see below)  
-`install_ppa`: PPAs to install (**Ubuntu Only**, see below)  
-`install_packages`: List of packages to install  
-`dbstrp_zfs_backport` Use the ZFS backport repo from 
-https://launchpad.net/~jonathonf/+archive/ubuntu/zfs  
-`zfs_pool`: ZFS pool (see ZFS section)  
-`zfs_fs`: ZFS filesystems (see ZFS section)  
-`zfs_root`: ZFS devices to use as root  
+provided by distro)
+`layout`: Dictionary of partitions / devices (**required**, see below)
+`md`: List of DM-RAID devices (see below)
+`lvm`: List of LVM volumes (see below)
+`install_ppa`: PPAs to install (**Ubuntu Only**, see below)
+`install_packages`: List of packages to install
+`dbstrp_zfs_backport` Use the ZFS backport repo from
+https://launchpad.net/~jonathonf/+archive/ubuntu/zfs
+`zfs_pool`: ZFS pool (see ZFS section)
+`zfs_fs`: ZFS filesystems (see ZFS section)
+`zfs_root`: ZFS devices to use as root
 `wipe`: Set to to string "ABSOLUTELY" if you wish to wipe the disk, this will
 remove any disklabels present as well as issue a TRIM/UNMAP for the device.
-Useful when you want to overwrite a target. **Please use extreme caution**  
+Useful when you want to overwrite a target. **Please use extreme caution**
 
 ## Debootstrap user options
-`dbstrp_user`:  
-  `name`: A name of debootstrap user (**default**: *debootstrap*)  
-  `uid`: UID of debootstrap user (**default**: *65533*)  
-  `group`: A group name of debootstrap user (**default**: *name of debootstrap user*)  
-  `gid`: GID of debootstrap user (**default**: *uid of debootstrap user*)  
-  `password`: A hashed password of debootstrap user (**default**: *\**)  
-  `non_unique`: Ability to create non unique user (**default**: *yes*)  
+`dbstrp_user`:
+  `name`: A name of debootstrap user (**default**: *debootstrap*)
+  `uid`: UID of debootstrap user (**default**: *65533*)
+  `group`: A group name of debootstrap user (**default**: *name of debootstrap user*)
+  `gid`: GID of debootstrap user (**default**: *uid of debootstrap user*)
+  `password`: A hashed password of debootstrap user (**default**: *\**)
+  `non_unique`: Ability to create non unique user (**default**: *yes*)
 
 ## Partition Layout `layout`
 Layout is a list of dictionaries, every dictionary representing a target
@@ -91,28 +91,28 @@ device. The dictionary contains the device names, as well as another list of
 dictionaries representing partitions (as you can see, I like my complex data
 structures).
 
-Elements in the device dictionary:  
-`device`: Path to the device  
-`partitions`: List of partition dictionary  
+Elements in the device dictionary:
+`device`: Path to the device
+`partitions`: List of partition dictionary
 `skip_grub`: *boolean* set to yes if you want to skip installing grub on this
-device (**default** *False*)  
+device (**default** *False*)
 
 ### Partition dictionary
 `num`: Ascending number, a limitation here, just make sure it increments with
-every element  
+every element
 `size`: size with qualifier (M for Megabytes etc.), leave empty for the rest
-of available space  
+of available space
 `type`: GTID typecode, for example 8200 for linux, see table below for common
-type codes  
+type codes
 `fs`: Target filesystem (**optional**, for example ext4, xfs, not needed for
-zfs)  
-`mount`: Where to mount this device (**optional**, example */boot*)  
-`encrypt`: Set to yes if you want encryption  
+zfs)
+`mount`: Where to mount this device (**optional**, example */boot*)
+`encrypt`: Set to yes if you want encryption
 `target`: Target name for device mapper (**required** when using encryption,
-for example *cryptroot*)  
-`label` filesystem label to use  
+for example *cryptroot*)
+`label` filesystem label to use
 `partlabel` partition label to use, defaults to `label` if defined, otherwise
-no label will be set.  
+no label will be set.
 
 | Type code | Description |
 |---|---|
@@ -126,36 +126,36 @@ no label will be set.
 Within the `md` list you can set up DM RAID devices. List items are
 dictionaries supporting the following keys:
 
-`level`: RAID level to be used (one of 0, 1, 4, 5, 6, 10) **required**  
+`level`: RAID level to be used (one of 0, 1, 4, 5, 6, 10) **required**
 `bitmap`: Device to use for bitmap, default "internal", use "none" to disable
-bitmap  
-`chunk_size`: RAID chunk size (required for all RAID levels except 1)  
-`name`: Device name **required**  
-`members`: List of devices to add to RAID  
+bitmap
+`chunk_size`: RAID chunk size (required for all RAID levels except 1)
+`name`: Device name **required**
+`members`: List of devices to add to RAID
 
 Encryption and mount options are supported here. Please note that the order is
 1. RAID, 2. Encryption, 3. LVM, so it is currently not possible to create a
-RAID of two LUKS devices or encrypt an LVM volume. 
+RAID of two LUKS devices or encrypt an LVM volume.
 
 ### Encryption Options
 `passphrase`: Passphrase for encryption, use ansible-vault here please.
-(**required** when using encryption)  
-`cipher`: Encryption cipher (**default** *aes-xts-plain64*)  
-`hash`: Hash type for LUKS (**default** *sha512*)  
+(**required** when using encryption)
+`cipher`: Encryption cipher (**default** *aes-xts-plain64*)
+`hash`: Hash type for LUKS (**default** *sha512*)
 `iter-time`: Time to spend on passphrase processing (**default** *5000*)
-`key-size`: Encryption key size (**default** *256*, values depend on cipher, for AES *128*, *256*, *512*)  
-`luks-type`: LUKS metadata type (**Default** *luks2*)  
-`luks-sector-size`: Sector size for LUKS encryption (**default** *512*, possible values: *512*, *4096*)   
-`target`: Device name to be used (**required**)  
+`key-size`: Encryption key size (**default** *256*, values depend on cipher, for AES *128*, *256*, *512*)
+`luks-type`: LUKS metadata type (**Default** *luks2*)
+`luks-sector-size`: Sector size for LUKS encryption (**default** *512*, possible values: *512*, *4096*)
+`target`: Device name to be used (**required**)
 
 ### LVM configuration
 LVM pvs can be created on disks, partitions as well as encrypted devices (use
 /dev/mapper/`target` for LUKS). This is a list of dictionaries, dictionary keys
 from partition dictionary can be used (except encryption) like `mount`, `fs`
-etc. 
+etc.
 
 `lvm`: Dictionary of lvol options, these are passed to the [lvol noduule](https://docs.ansible.com/ansible/latest/modules/lvol_module.html)
-as such, all options available to that module can be used. 
+as such, all options available to that module can be used.
 
 #### Example device with partitions:
 ```
@@ -189,18 +189,18 @@ This defines the devices to use for the ZFS pool, you can use devices and
 targets defined in `layout`. A list of dictionaries with the following
 elements:
 
-`poolname`: name of the ZFS pool (**required**, example *rpool*)  
+`poolname`: name of the ZFS pool (**required**, example *rpool*)
 `devices`: List of devices, you can insert key words like mirror, raidz etc.
-like you would when using zpool create. (**required**, example below)  
-`options`: List of options for the pool  
-`fs_options`: Options for all filesystems in that pool  
+like you would when using zpool create. (**required**, example below)
+`options`: List of options for the pool
+`fs_options`: Options for all filesystems in that pool
 
 ### ZFS Filesystems / Datasets to create `zfs_fs`
 This looks a lot like the pool definition above, again a list of dictionaries
 (they call me the one trick pony). Dictionary definition:
 
 `path`: Path of the dataset, make sure that they are in the correct order,
-(**required**, example: *rpool/root*)  
+(**required**, example: *rpool/root*)
 `options`: List of filesystem options, see examples
 
 ### Set the root / boot fs for ZFS `zfs_root`
