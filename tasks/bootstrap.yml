@@ -13,7 +13,12 @@
       _mktemp: None
 
   - name: mount tmpfs
-    command: "mount -t tmpfs -o size={{ tmpfs_size }} none {{ _bootstrap_target }}"
+    ansible.posix.mount:
+      path: "{{ _bootstrap_target }}"
+      src: tmpfs
+      fstype: tmpfs
+      opts: size={{ tmpfs_size }}
+      state: ephemeral
 
   when: use_tmpfs
 
